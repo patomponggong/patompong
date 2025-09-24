@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title> Patompong Chanapoll </title>
+  <meta name="description" content="ยินดีต้อนรับเข้าสู่เว็บไซต์ของคุณครูปฐมพงศ์ ชนะพล"/>
+  <link rel="icon" href="https://img2.pic.in.th/pic/IMG_1972-removebg-preview.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;800&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0b1020;
+      --ink:#eaf0ff;
+      --muted:#9fb0d1;
+      --line:#1b2550;
+
+      --brand:#7dd3fc;   /* sky-300 */
+      --brand2:#a78bfa;  /* violet-400 */
+      --accent:#22d3ee;  /* cyan-400 */
+      --card:#121936cc;  /* glass */
+
+      --radius:20px;
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
+      --glass: saturate(140%) blur(8px);
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f6f8ff;
+        --ink:#0b1220;
+        --muted:#4b556a;
+        --line:#dbe3f0;
+        --card:#ffffffcc;
+        --shadow: 0 18px 50px rgba(2,6,23,.12);
+        --glass: saturate(130%) blur(6px);
+      }
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0}
+    body{
+      font-family: Inter, Kanit, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(60vw 35vh at 15% -10%, rgba(125,211,252,.25), transparent 60%),
+        radial-gradient(60vw 35vh at 85% 0%, rgba(167,139,250,.25), transparent 55%),
+        var(--bg);
+      line-height:1.6;
+      overflow-x:hidden;
+    }
+
+    /* Floating Aurora Blobs */
+    .blob{position:fixed; z-index:-1; filter: blur(50px); opacity:.55; pointer-events:none}
+    .b1{width:42vmax;height:42vmax;background:radial-gradient(circle at 30% 30%, #60a5fa, transparent 60%); left:-10vmax; top:-10vmax; animation: drift 24s ease-in-out infinite}
+    .b2{width:38vmax;height:38vmax;background:radial-gradient(circle at 70% 30%, #22d3ee, transparent 60%); right:-8vmax; top:-8vmax; animation: drift2 28s ease-in-out infinite}
+    .b3{width:45vmax;height:45vmax;background:radial-gradient(circle at 50% 50%, #a78bfa, transparent 60%); left:20vmax; bottom:-15vmax; animation: drift3 32s ease-in-out infinite}
+    @keyframes drift{ 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,30px)} }
+    @keyframes drift2{ 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,50px)} }
+    @keyframes drift3{ 0%,100%{transform:translate(0,0)} 50%{transform:translate(60px,-20px)} }
+
+    .container{max-width:1200px;margin:0 auto;padding:0 20px}
+
+    /* Header */
+    .site-header{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: var(--glass);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      border-bottom:1px solid var(--line);
+    }
+    .nav{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 0;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.2px;
+    }
+    .brand img{width:36px;height:36px;border-radius:50%;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+    .nav a{
+      color:var(--ink); text-decoration:none; font-weight:700;
+      border:1px solid transparent; padding:8px 12px; border-radius:12px;
+    }
+    .nav a:hover{ border-color:var(--line); background:rgba(255,255,255,.06) }
+
+    /* Hero */
+    .hero{
+      padding:64px 0 40px;
+      display:grid; gap:24px; align-items:center;
+      grid-template-columns: 1.1fr .9fr;
+    }
+    @media (max-width: 980px){ .hero{ grid-template-columns:1fr; padding:48px 0 24px } }
+    .h-eyebrow{
+      display:inline-block; font-weight:800; text-transform:uppercase; font-size:12px; letter-spacing:.4px;
+      color:var(--ink); background:linear-gradient(90deg, var(--brand), var(--brand2)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .h-title{ margin:6px 0 8px; font-weight:900; line-height:1.1; font-size: clamp(32px, 4.5vw, 56px) }
+    .h-sub{ color:var(--muted); font-size: clamp(14px, 1.7vw, 18px); max-width:56ch }
+
+    .cta{ display:flex; gap:12px; margin-top:16px; flex-wrap:wrap }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:12px 16px; border-radius:14px; font-weight:800; cursor:pointer; text-decoration:none;
+      border:1px solid rgba(255,255,255,.15); transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+    .btn-primary{
+      color:#0b1220; background: linear-gradient(90deg, var(--brand), var(--brand2));
+      box-shadow: 0 14px 28px rgba(2,6,23,.18);
+    }
+    .btn-ghost{
+      color:var(--ink); background: rgba(255,255,255,.08);
+      backdrop-filter: var(--glass);
+    }
+    .btn:hover{ transform: translateY(-2px); filter: brightness(1.04) }
+
+    .hero-card{
+      background: var(--card);
+      backdrop-filter: var(--glass);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:18px;
+      display:grid; grid-template-columns: 140px 1fr; gap:18px; align-items:center;
+    }
+    @media (max-width:700px){ .hero-card{ grid-template-columns:1fr } }
+    .avatar{
+      width:140px; height:140px; border-radius:18px; object-fit:cover; object-position:top;
+      border:4px solid rgba(255,255,255,.25); background:#fff2; box-shadow:0 10px 26px rgba(0,0,0,.28);
+    }
+    .hero-meta{ display:grid; gap:8px }
+    .stat{ display:flex; justify-content:space-between; gap:12px; padding:10px 12px; border-radius:12px; border:1px dashed var(--line); }
+
+    /* Sections */
+    .section{ padding:28px 0 }
+    .cards{ display:grid; gap:18px; grid-template-columns: repeat(3, 1fr) }
+    @media (max-width:980px){ .cards{ grid-template-columns: 1fr } }
+    .card{
+      background: var(--card);
+      backdrop-filter: var(--glass);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:18px;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .card:hover{ transform: translateY(-4px); box-shadow: 0 18px 60px rgba(2,6,23,.25) }
+    .card h3{ margin:0 0 4px; font-size:20px }
+    .card p{ margin:0; color:var(--muted) }
+
+    /* Gallery */
+    .gallery{
+      display:grid; gap:12px; grid-template-columns: repeat(6, 1fr);
+    }
+    .gallery img{
+      width:100%; height:160px; object-fit:cover; object-position:center;
+      border-radius:14px; border:1px solid var(--line); background:#0003;
+      transition: transform .2s ease;
+    }
+    .gallery img:hover{ transform:scale(1.03) }
+    @media (max-width:980px){ .gallery{ grid-template-columns: repeat(3, 1fr) } }
+
+    /* Footer */
+    .site-footer{
+      margin-top:40px; padding:20px 0; border-top:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.06));
+      backdrop-filter: var(--glass);
+    }
+    .foot{
+      display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+      color:var(--muted); font-size:14px;
+    }
+    .foot .brand{ font-size:14px }
+    .foot .brand img{ width:28px; height:28px }
+
+    /* Utilities */
+    .muted{ color:var(--muted) }
+    .h2{ font-weight:900; font-size: clamp(22px, 3vw, 32px); margin:0 0 8px }
+    .divider{ height:1px; background:var(--line); margin:16px 0 }
+  </style>
+</head>
+<body>
+  <!-- Background blobs -->
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+
+  <!-- ========== Header ========== -->
+  <header class="site-header">
+    <div class="container nav">
+      <div class="brand">
+        <img src="https://img2.pic.in.th/pic/IMG_1972-removebg-preview.png" alt="CSK Logo">
+        <span>CSK • Aurora</span>
+      </div>
+      <nav style="display:flex; gap:8px;">
+        <a href="#about">About</a>
+        <a href="#features">Features</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ========== Hero ========== -->
+  <section class="container hero">
+    <div>
+      <span class="h-eyebrow">"Welcome"</span>
+      <h1 class="h-title">ยินดีต้อนรับเข้าสู่เว็บไซต์ของคุณครูปฐมพงศ์ ชนะพล</h1>
+      <p class="h-sub">เว็บไซต์ ของคุณครูปฐมพงศ์ ชนะพล</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#features">ดูความสามารถ</a>
+        <a class="btn btn-ghost" href="#gallery">ชมภาพรวม</a>
+      </div>
+    </div>
+
+    <!-- Player/Teacher Card -->
+    <div class="hero-card">
+      <img class="avatar" src="IMG_6056.JPG" alt="Patompong Chanapoll">
+      <div class="hero-meta">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <strong>Patompong Chanapoll</strong>
+          <span class="muted">Computer Teacher</span>
+        </div>
+        <div class="stat"><span>อีเมล</span><a href="mailto:patompong.gong@csk.ac.th">patompong.gong@csk.ac.th</a></div>
+        <div class="stat"><span>โรงเรียน</span><span>Chumchon Ban Sikaew School</span></div>
+        <div class="stat"><span>โฟกัส</span><span>Coding • Robotics • CT</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Body: About / Features / Gallery / Contact ========== -->
+  <main>
+    <!-- About -->
+    <section id="about" class="container section">
+      <h2 class="h2">เกี่ยวกับหน้าเว็บนี้</h2>
+      <p class="muted">โครงสร้างเรียบง่ายแต่ทรงพลัง: Header (เมนูนำทาง) • Body (เนื้อหา, คุณสมบัติ, แกลเลอรี) • Footer (ลิขสิทธิ์/โลโก้) ปรับขนาดและคอนเทนต์ได้อิสระ เหมาะกับหน้าแนะนำตัว โครงการ และพอร์ตผลงาน</p>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="container section">
+      <h2 class="h2">จุดเด่น</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>ดีไซน์ Aurora + Glass</h3>
+          <p>พื้นหลังไล่เฉดและกลาสมอร์ฟิซึม ให้มิติและความหรูหราในทันที</p>
+        </article>
+        <article class="card">
+          <h3>Responsive เต็มรูปแบบ</h3>
+          <p>สวยงามทั้งมือถือ แท็บเล็ต และเดสก์ท็อป ปรับเลย์เอาต์อัตโนมัติ</p>
+        </article>
+        <article class="card">
+          <h3>สื่อสารชัดเจน</h3>
+          <p>ฟอนต์อ่านง่าย โทนมืออาชีพ พร้อมปุ่มเรียกให้ทำงาน (CTA) เด่นชัด</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Gallery -->
+    <section id="gallery" class="container section">
+      <h2 class="h2">แกลเลอรี</h2>
+      <div class="gallery">
+        <img src="https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=1200&auto=format&fit=crop" alt="">
+        <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1200&auto=format&fit=crop" alt="">
+        <img src="https://images.unsplash.com/photo-1535223289827-42f1e9919769?q=80&w=1200&auto=format&fit=crop" alt="">
+        <img src="https://images.unsplash.com/photo-1550439062-609e1531270e?q=80&w=1200&auto=format&fit=crop" alt="">
+        <img src="https://images.unsplash.com/photo-1549740425-5e9ed4d8cd18?q=80&w=1200&auto=format&fit=crop" alt="">
+        <img src="https://images.unsplash.com/photo-1555949963-aa79dcee981d?q=80&w=1200&auto=format&fit=crop" alt="">
+      </div>
+    </section>
+
+    <!-- Contact / CTA -->
+    <section id="contact" class="container section">
+      <div class="card" style="display:grid; grid-template-columns: 1.2fr .8fr; gap:18px; align-items:center;">
+        <div>
+          <h2 class="h2" style="margin:0 0 6px">พร้อมคุยงานหรือแลกเปลี่ยนไอเดียไหม?</h2>
+          <p class="muted" style="margin:0 0 12px">ยินดีร่วมพัฒนาสื่อการสอน ระบบสารสนเทศโรงเรียน หรืองานโชว์เคสผลงานนักเรียน</p>
+          <div class="cta">
+            <a class="btn btn-primary" href="mailto:patompong.gong@csk.ac.th">ติดต่อครูก้อง</a>
+            <a class="btn btn-ghost" href="#about">อ่านรายละเอียด</a>
+          </div>
+        </div>
+        <div style="display:grid; gap:8px;">
+          <div class="stat"><span>อีเมล</span><a href="mailto:patompong.gong@csk.ac.th">patompong.gong@csk.ac.th</a></div>
+          <div class="stat"><span>เว็บไซต์</span><span>www.patompong.csk.ac.th</span></div>
+          <div class="stat"><span>โฟกัส</span><span>EdTech • Firebase • React • AI for Learning</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========== Footer ========== -->
+  <footer class="site-footer">
+    <div class="container foot">
+      <div class="brand">
+        <img src="https://img2.pic.in.th/pic/IMG_1972-removebg-preview.png" alt="logo">
+        <strong>ครูก้องไง จะใครหละ</strong> | <a href="https://www.patompong.csk.ac.th" target="_blank" rel="noopener">www.patompong.csk.ac.th</a>
+      </div>
+      <div>© <span id="year"></span> All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script>
+    // ปีอัตโนมัติ
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
