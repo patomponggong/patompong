@@ -63,6 +63,13 @@
                 </svg>
                 คำนวณเกรดทั้งหมด
             </button>
+            <button id="exportCsvBtn"
+                class="flex-1 bg-blue-500 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-600 transition duration-300 ease-in-out">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block -mt-1 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L6.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                ส่งออก CSV
+            </button>
         </div>
 
         <!-- Message Box -->
@@ -105,6 +112,7 @@
         const examScoreInput = document.getElementById('examScore');
         const addStudentBtn = document.getElementById('addStudentBtn');
         const calculateGradesBtn = document.getElementById('calculateGradesBtn');
+        const exportCsvBtn = document.getElementById('exportCsvBtn'); // Added Export CSV button
         const resultsTableBody = document.getElementById('resultsTableBody');
         const messageBox = document.getElementById('messageBox');
         const messageText = document.getElementById('messageText');
@@ -201,6 +209,47 @@
             renderTable();
         };
 
+        /**
+         * Exports the current student data to a CSV file.
+         */
+        const exportToCsv = () => {
+            // Check if grades have been calculated
+            if (students.length === 0 || students[0].totalScore === null) {
+                showMessageBox('กรุณาคำนวณเกรดก่อนทำการส่งออก');
+                return;
+            }
+
+            // Define CSV headers
+            const headers = ['ชื่อ', 'คะแนนเก็บ', 'คะแนนสอบ', 'คะแนนรวม', 'เกรด'];
+            // Map student data to CSV rows
+            const rows = students.map(student => [
+                `"${student.name}"`, // Enclose name in quotes to handle commas
+                student.workScore,
+                student.examScore,
+                student.totalScore,
+                student.grade
+            ]);
+
+            // Combine headers and rows
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(e => e.join(','))
+            ].join('\n');
+
+            // Create a Blob and a download link
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'grades.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        };
+
         // ----------------- DOM Rendering -----------------
 
         /**
@@ -273,6 +322,11 @@
          * Handles the click event for the "Calculate Grades" button.
          */
         calculateGradesBtn.addEventListener('click', calculateAllGrades);
+
+        /**
+         * Handles the click event for the "Export CSV" button.
+         */
+        exportCsvBtn.addEventListener('click', exportToCsv);
 
         /**
          * Handles the click event for the "Close Message" button.
