@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade Calculator</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-6">เว็บคำนวณเกรด</h1>
+
+        <!-- Form for Grade Weights -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h2 class="text-xl font-semibold mb-3 text-gray-700">ตั้งค่าน้ำหนักคะแนน</h2>
+            <div class="flex flex-col sm:flex-row gap-4 items-center">
+                <div class="flex-1 w-full">
+                    <label for="workWeight" class="block text-sm font-medium text-gray-600 mb-1">คะแนนเก็บ (0.0 - 1.0)</label>
+                    <input type="number" id="workWeight" value="0.6" step="0.1" min="0" max="1"
+                        class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex-1 w-full">
+                    <label for="examWeight" class="block text-sm font-medium text-gray-600 mb-1">คะแนนสอบ (0.0 - 1.0)</label>
+                    <input type="number" id="examWeight" value="0.4" step="0.1" min="0" max="1"
+                        class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Form for Adding Students -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h2 class="text-xl font-semibold mb-3 text-gray-700">เพิ่มรายชื่อนักเรียน</h2>
+            <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                <input type="text" id="studentName" placeholder="ชื่อนักเรียน"
+                    class="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="number" id="workScore" placeholder="คะแนนเก็บ (0-100)" min="0" max="100"
+                    class="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="number" id="examScore" placeholder="คะแนนสอบ (0-100)" min="0" max="100"
+                    class="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <button id="addStudentBtn"
+                class="w-full sm:w-auto bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-300 ease-in-out">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block -mt-1 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                เพิ่มนักเรียน
+            </button>
+        </div>
+
+        <!-- Action Buttons and Result Table -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-6">
+            <button id="calculateGradesBtn"
+                class="flex-1 bg-green-500 text-white font-bold py-3 px-4 rounded-md hover:bg-green-600 transition duration-300 ease-in-out">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block -mt-1 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h14a1 1 0 001-1V4a1 1 0 00-1-1H3zm12 5a1 1 0 100-2H5a1 1 0 000 2h10zm0 4a1 1 0 100-2H5a1 1 0 100 2h10zm-3 4a1 1 0 100-2H5a1 1 0 100 2h7z" clip-rule="evenodd" />
+                </svg>
+                คำนวณเกรดทั้งหมด
+            </button>
+        </div>
+
+        <!-- Message Box -->
+        <div id="messageBox" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50">
+            <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm text-center">
+                <p id="messageText" class="text-lg font-semibold mb-4 text-gray-800"></p>
+                <button id="closeMessageBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">ตกลง</button>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อ</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คะแนนเก็บ</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คะแนนสอบ</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คะแนนรวม</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เกรด</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTableBody" class="bg-white divide-y divide-gray-200">
+                    <!-- Student data will be inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript for Grade Calculator Logic
+
+        // ----------------- DOM Elements -----------------
+        const workWeightInput = document.getElementById('workWeight');
+        const examWeightInput = document.getElementById('examWeight');
+        const studentNameInput = document.getElementById('studentName');
+        const workScoreInput = document.getElementById('workScore');
+        const examScoreInput = document.getElementById('examScore');
+        const addStudentBtn = document.getElementById('addStudentBtn');
+        const calculateGradesBtn = document.getElementById('calculateGradesBtn');
+        const resultsTableBody = document.getElementById('resultsTableBody');
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+        const closeMessageBtn = document.getElementById('closeMessageBtn');
+        
+        // ----------------- State Management -----------------
+        let students = []; // Array to store student objects
+
+        // ----------------- Utility Functions -----------------
+        
+        /**
+         * Displays a custom message box instead of using alert().
+         * @param {string} message The message to display.
+         */
+        const showMessageBox = (message) => {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+        };
+
+        // ----------------- Data Persistence (localStorage) -----------------
+
+        /**
+         * Loads student data from localStorage on page load.
+         * Initializes with sample data if no data exists.
+         */
+        const loadStudents = () => {
+            const savedStudents = localStorage.getItem('students');
+            if (savedStudents) {
+                try {
+                    students = JSON.parse(savedStudents);
+                } catch (e) {
+                    console.error("Failed to parse students from localStorage:", e);
+                    students = createSampleData(); // Fallback to sample data
+                }
+            } else {
+                students = createSampleData();
+            }
+        };
+
+        /**
+         * Saves the current students array to localStorage.
+         */
+        const saveStudents = () => {
+            localStorage.setItem('students', JSON.stringify(students));
+        };
+
+        /**
+         * Creates an array of sample student data.
+         * @returns {Array} An array of student objects.
+         */
+        const createSampleData = () => {
+            return [
+                { name: 'Arthit Chaiyaporn', workScore: 82, examScore: 88, totalScore: null, grade: null },
+                { name: 'Benjamas Sriwan', workScore: 76, examScore: 91, totalScore: null, grade: null },
+                { name: 'Chananun Lekdee', workScore: 95, examScore: 85, totalScore: null, grade: null },
+                { name: 'Duangjai Pisit', workScore: 68, examScore: 72, totalScore: null, grade: null },
+                { name: 'Ekachai Yodsri', workScore: 54, examScore: 63, totalScore: null, grade: null }
+            ];
+        };
+        
+        // ----------------- Core Logic -----------------
+        
+        /**
+         * Calculates the grade for a given total score.
+         * @param {number} totalScore The calculated total score.
+         * @returns {string} The corresponding grade (A, B, C, D, or F).
+         */
+        const calculateGrade = (totalScore) => {
+            if (totalScore >= 90) return 'A';
+            if (totalScore >= 80) return 'B';
+            if (totalScore >= 70) return 'C';
+            if (totalScore >= 60) return 'D';
+            return 'F';
+        };
+
+        /**
+         * Calculates total score and grade for all students based on current weights.
+         */
+        const calculateAllGrades = () => {
+            const workWeight = parseFloat(workWeightInput.value);
+            const examWeight = parseFloat(examWeightInput.value);
+
+            if (isNaN(workWeight) || isNaN(examWeight) || (workWeight + examWeight) !== 1) {
+                showMessageBox('น้ำหนักคะแนนรวมกันต้องเท่ากับ 1.0');
+                return;
+            }
+
+            students.forEach(student => {
+                const totalScore = (student.workScore * workWeight) + (student.examScore * examWeight);
+                student.totalScore = parseFloat(totalScore.toFixed(2));
+                student.grade = calculateGrade(student.totalScore);
+            });
+            saveStudents();
+            renderTable();
+        };
+
+        // ----------------- DOM Rendering -----------------
+
+        /**
+         * Renders the student data table from the students array.
+         */
+        const renderTable = () => {
+            resultsTableBody.innerHTML = '';
+            students.forEach((student, index) => {
+                const row = document.createElement('tr');
+                row.classList.add('hover:bg-gray-50');
+                
+                // Set grade color for better readability
+                let gradeColor = 'text-gray-800';
+                if (student.grade === 'A') gradeColor = 'text-green-600 font-bold';
+                else if (student.grade === 'B') gradeColor = 'text-blue-600 font-bold';
+                else if (student.grade === 'C') gradeColor = 'text-indigo-600 font-bold';
+                else if (student.grade === 'D') gradeColor = 'text-yellow-600 font-bold';
+                else if (student.grade === 'F') gradeColor = 'text-red-600 font-bold';
+
+                row.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${index + 1}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${student.name}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${student.workScore}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${student.examScore}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${student.totalScore !== null ? student.totalScore : '-'}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm ${gradeColor}">${student.grade || '-'}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="delete-btn text-red-600 hover:text-red-900 transition duration-300 ease-in-out" data-index="${index}">
+                            ลบ
+                        </button>
+                    </td>
+                `;
+                resultsTableBody.appendChild(row);
+            });
+        };
+
+        // ----------------- Event Listeners -----------------
+        
+        /**
+         * Handles the click event for the "Add Student" button.
+         */
+        addStudentBtn.addEventListener('click', () => {
+            const name = studentNameInput.value.trim();
+            const workScore = parseInt(workScoreInput.value);
+            const examScore = parseInt(examScoreInput.value);
+
+            if (name === '' || isNaN(workScore) || isNaN(examScore) || workScore < 0 || workScore > 100 || examScore < 0 || examScore > 100) {
+                showMessageBox('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง (คะแนน 0-100)');
+                return;
+            }
+
+            const newStudent = {
+                name: name,
+                workScore: workScore,
+                examScore: examScore,
+                totalScore: null,
+                grade: null
+            };
+            students.push(newStudent);
+            saveStudents();
+            renderTable();
+
+            // Clear input fields after adding
+            studentNameInput.value = '';
+            workScoreInput.value = '';
+            examScoreInput.value = '';
+        });
+
+        /**
+         * Handles the click event for the "Calculate Grades" button.
+         */
+        calculateGradesBtn.addEventListener('click', calculateAllGrades);
+
+        /**
+         * Handles the click event for the "Close Message" button.
+         */
+        closeMessageBtn.addEventListener('click', () => {
+            messageBox.classList.add('hidden');
+        });
+
+        /**
+         * Handles click events on the table body for deleting a student.
+         */
+        resultsTableBody.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                const index = e.target.getAttribute('data-index');
+                students.splice(index, 1);
+                saveStudents();
+                renderTable();
+            }
+        });
+
+        // ----------------- Initialization -----------------
+
+        // Load data on page load and render the table
+        window.onload = () => {
+            loadStudents();
+            renderTable();
+        };
+
+    </script>
+</body>
+</html>
