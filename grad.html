@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบคำนวณผลการเรียน</title>
+    <title>ระบบตัดเกรด</title>
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN for charts -->
@@ -37,8 +37,8 @@
         <img src="https://img2.pic.in.th/pic/IMG_1972-removebg-preview.png" alt="โลโก้โรงเรียน" class="w-28 h-28 mx-auto mb-4 object-contain rounded-full shadow-md">
 
         <!-- Main Title -->
-        <h1 class="text-4xl sm:text-5xl font-extrabold text-center text-gray-800 mb-6">ระบบคำนวณผลการเรียน</h1>
-     
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-center text-gray-800 mb-6">ระบบตัดเกรด</h1>
+
         <!-- Dashboard Cards & Chart -->
         <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <!-- Total Students Card -->
@@ -138,6 +138,13 @@
                 </svg>
                 นำเข้า CSV
             </button>
+            <button id="deleteAllBtn"
+                class="flex-1 bg-red-500 text-white font-bold py-3 px-4 rounded-md shadow-lg hover:bg-red-600 transition duration-300 ease-in-out">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block -mt-1 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 112 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                </svg>
+                ลบข้อมูลทั้งหมด
+            </button>
             <input type="file" id="csvFileInput" class="hidden" accept=".csv">
         </div>
 
@@ -146,6 +153,28 @@
             <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm text-center">
                 <p id="messageText" class="text-lg font-semibold mb-4 text-gray-800"></p>
                 <button id="closeMessageBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">ตกลง</button>
+            </div>
+        </div>
+
+        <!-- Import Options Modal -->
+        <div id="importModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50">
+            <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg text-center">
+                <h2 class="text-xl font-bold mb-4 text-gray-800">เลือกวิธีการนำเข้าข้อมูล</h2>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button id="replaceDataBtn" class="flex-1 bg-red-500 text-white font-bold py-3 px-4 rounded-md hover:bg-red-600 transition duration-300 ease-in-out">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block -mt-1 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        แทนที่ข้อมูลเดิม
+                    </button>
+                    <button id="appendDataBtn" class="flex-1 bg-green-500 text-white font-bold py-3 px-4 rounded-md hover:bg-green-600 transition duration-300 ease-in-out">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block -mt-1 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                        </svg>
+                        เพิ่มข้อมูลต่อท้าย
+                    </button>
+                </div>
+                <button id="cancelImportBtn" class="mt-4 text-sm text-gray-500 hover:text-gray-700">ยกเลิก</button>
             </div>
         </div>
 
@@ -188,11 +217,18 @@
         const calculateGradesBtn = document.getElementById('calculateGradesBtn');
         const exportCsvBtn = document.getElementById('exportCsvBtn');
         const importCsvBtn = document.getElementById('importCsvBtn');
+        const deleteAllBtn = document.getElementById('deleteAllBtn');
         const csvFileInput = document.getElementById('csvFileInput');
         const resultsTableBody = document.getElementById('resultsTableBody');
         const messageBox = document.getElementById('messageBox');
         const messageText = document.getElementById('messageText');
         const closeMessageBtn = document.getElementById('closeMessageBtn');
+
+        // Import Modal Elements
+        const importModal = document.getElementById('importModal');
+        const replaceDataBtn = document.getElementById('replaceDataBtn');
+        const appendDataBtn = document.getElementById('appendDataBtn');
+        const cancelImportBtn = document.getElementById('cancelImportBtn');
 
         // Dashboard Elements
         const totalStudentsCard = document.getElementById('totalStudentsCard');
@@ -344,8 +380,9 @@
         /**
          * Imports student data from a CSV file.
          * @param {File} file The CSV file to import.
+         * @param {string} mode 'replace' to replace existing data, 'append' to add to it.
          */
-        const importCsv = (file) => {
+        const importCsv = (file, mode) => {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const csvText = e.target.result;
@@ -354,15 +391,20 @@
                     const columns = row.split(',');
                     return {
                         name: columns[1].replace(/"/g, ''),
-                        workScore: parseInt(columns[2]),
-                        examScore: parseInt(columns[3]),
+                        workScore: parseFloat(columns[2]),
+                        examScore: parseFloat(columns[3]),
                         totalScore: null,
                         grade: null
                     };
                 }).filter(student => student.name && !isNaN(student.workScore) && !isNaN(student.examScore));
 
                 if (importedStudents.length > 0) {
-                    students = importedStudents;
+                    if (mode === 'replace') {
+                        students = importedStudents;
+                    } else if (mode === 'append') {
+                        students = students.concat(importedStudents);
+                    }
+                    
                     saveStudents();
                     renderTable();
                     showMessageBox('นำเข้าข้อมูลสำเร็จแล้ว!');
@@ -374,6 +416,20 @@
                 showMessageBox('เกิดข้อผิดพลาดในการอ่านไฟล์');
             };
             reader.readAsText(file);
+        };
+        
+        /**
+         * Deletes all student data.
+         */
+        const deleteAllStudents = () => {
+            if (students.length === 0) {
+                showMessageBox('ไม่มีข้อมูลนักเรียนให้ลบ');
+                return;
+            }
+            students = [];
+            saveStudents();
+            renderTable();
+            showMessageBox('ลบข้อมูลนักเรียนทั้งหมดแล้ว');
         };
 
         /**
@@ -602,12 +658,43 @@
          * Handles the click event for the "Export CSV" button.
          */
         exportCsvBtn.addEventListener('click', exportToCsv);
+        
+        /**
+         * Handles the click event for the "Delete All" button.
+         */
+        deleteAllBtn.addEventListener('click', deleteAllStudents);
 
         /**
          * Handles the click event for the "Import CSV" button.
          */
         importCsvBtn.addEventListener('click', () => {
+            importModal.classList.remove('hidden');
+        });
+
+        /**
+         * Handles the click event for "Replace Data" button in the modal.
+         */
+        replaceDataBtn.addEventListener('click', () => {
+            importModal.classList.add('hidden');
             csvFileInput.click();
+            csvFileInput.setAttribute('data-mode', 'replace');
+        });
+
+        /**
+         * Handles the click event for "Append Data" button in the modal.
+         */
+        appendDataBtn.addEventListener('click', () => {
+            importModal.classList.add('hidden');
+            csvFileInput.click();
+            csvFileInput.setAttribute('data-mode', 'append');
+        });
+
+        /**
+         * Handles the click event for "Cancel" button in the modal.
+         */
+        cancelImportBtn.addEventListener('click', () => {
+            importModal.classList.add('hidden');
+            csvFileInput.value = ''; // Clear file input
         });
 
         /**
@@ -615,8 +702,9 @@
          */
         csvFileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
+            const mode = e.target.getAttribute('data-mode');
             if (file) {
-                importCsv(file);
+                importCsv(file, mode);
             }
         });
 
