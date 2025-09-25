@@ -51,10 +51,10 @@
   <script>
     // *** สำคัญมาก: ใส่ URL Web App ของ Google Apps Script ตรงนี้ ***
     // ตัวอย่าง: const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx.../exec";
-    const WEB_APP_URL = "PUT_YOUR_WEB_APP_URL_HERE";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyhXf_9FcjIzrVR84mwDNZnyh_5573Mpbvd3W0oLa3OPWcSbxdaGkMiCxStM-zJIH20Jw/exec";
 
     async function api(action, payload = {}) {
-      if (!WEB_APP_URL || WEB_APP_URL.includes("PUT_YOUR_WEB_APP_URL_HERE")) {
+      if (!WEB_APP_URL || WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbyhXf_9FcjIzrVR84mwDNZnyh_5573Mpbvd3W0oLa3OPWcSbxdaGkMiCxStM-zJIH20Jw/exec")) {
         throw new Error("กรุณาตั้งค่า WEB_APP_URL ให้ถูกต้องก่อนใช้งาน");
       }
       const res = await fetch(WEB_APP_URL, {
