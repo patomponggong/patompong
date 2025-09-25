@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ระบบเช็คชื่อกิจกรรมหน้าเสาธง (Google Sheets Edition)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+    * { font-family: 'Sarabun', sans-serif; }
+    :root { --primary-green:#2E8B57; --secondary-pink:#FF69B4; --light-green:#98FB98; --light-pink:#FFC0CB; }
+    .btn-primary{background-color:var(--primary-green);color:white;transition:all .3s;}
+    .btn-primary:hover{background-color:#1a6b3d;}
+    .status-present{background-color:#98FB98;} .status-absent{background-color:#FFA07A;}
+    .status-late{background-color:#FFFF99;} .status-sick{background-color:#ADD8E6;} .status-leave{background-color:#DDA0DD;}
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div id="root"></div>
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyhXf_9FcjIzrVR84mwDNZnyh_5573Mpbvd3W0oLa3OPWcSbxdaGkMiCxStM-zJIH20Jw/exec";
+    async function api(action, payload = {}) {
+      if (!WEB_APP_URL || WEB_APP_URL.includes("PUT_YOUR_WEB_APP_URL_HERE")) throw new Error("กรุณาตั้งค่า WEB_APP_URL ให้ถูกต้อง");
+      const res = await fetch(WEB_APP_URL, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ action, ...payload }) });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || "API error");
+      return json.data !== undefined ? json.data : json;
+    }
+  </script>
+  <script type="text/babel">
+    /* Minimal app shell to keep the file self-contained if the previous version is missing.
+       The user's earlier full-featured index.html was already provided; here we just ensure WEB_APP_URL is set. */
+    function App(){ return <div className="p-6 text-center">ตั้งค่า WEB_APP_URL แล้วรีเฟรชหน้านี้ครับ</div>; }
+    const root = ReactDOM.createRoot(document.getElementById('root')); root.render(<App/>);
+  </script>
+</body>
+</html>
