@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ระบบเช็คชื่อกิจกรรมหน้าเสาธง (Google Sheets Edition)</title>
+  <title>ระบบเช็คชื่อกิจกรรมหน้าเสาธง</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -25,7 +25,7 @@
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyhXf_9FcjIzrVR84mwDNZnyh_5573Mpbvd3W0oLa3OPWcSbxdaGkMiCxStM-zJIH20Jw/exec";
     async function api(action, payload = {}) {
-      if (!WEB_APP_URL || WEB_APP_URL.includes("PUT_YOUR_WEB_APP_URL_HERE")) throw new Error("กรุณาตั้งค่า WEB_APP_URL ให้ถูกต้อง");
+      if (!WEB_APP_URL || WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbyhXf_9FcjIzrVR84mwDNZnyh_5573Mpbvd3W0oLa3OPWcSbxdaGkMiCxStM-zJIH20Jw/exec")) throw new Error("กรุณาตั้งค่า WEB_APP_URL ให้ถูกต้อง");
       const res = await fetch(WEB_APP_URL, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ action, ...payload }) });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || "API error");
