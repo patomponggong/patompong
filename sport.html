@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบรายงานผลการแข่งขันกีฬาโรงเรียนชุมชนบ้านสีแก้ว</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Kanit', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .medal-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .medal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(45deg, #43e97b 0%, #38f9d7 100%);
+        }
+        .btn-warning {
+            background: linear-gradient(45deg, #fa709a 0%, #fee140 100%);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .top-school {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+        .second-school {
+            background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
+        }
+        .third-school {
+            background: linear-gradient(135deg, #cd7f32 0%, #daa520 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-3xl md:text-5xl font-bold mb-2">🏆 ระบบรายงานผลการแข่งขันกีฬา</h1>
+            <h2 class="text-xl md:text-2xl font-medium">โรงเรียนชุมชนบ้านสีแก้ว</h2>
+        </div>
+    </header>
+
+    <!-- Dashboard -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Medal Summary -->
+        <section class="mb-8">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">🏅 สรุปเหรียญรางวัล</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="medal-card bg-gradient-to-br from-yellow-400 to-yellow-600 text-white p-6 rounded-2xl card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-lg font-medium opacity-90">เหรียญทอง</p>
+                            <p class="text-4xl font-bold" id="goldCount">0</p>
+                        </div>
+                        <div class="text-6xl">🥇</div>
+                    </div>
+                </div>
+                <div class="medal-card bg-gradient-to-br from-gray-400 to-gray-600 text-white p-6 rounded-2xl card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-lg font-medium opacity-90">เหรียญเงิน</p>
+                            <p class="text-4xl font-bold" id="silverCount">0</p>
+                        </div>
+                        <div class="text-6xl">🥈</div>
+                    </div>
+                </div>
+                <div class="medal-card bg-gradient-to-br from-orange-400 to-orange-600 text-white p-6 rounded-2xl card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-lg font-medium opacity-90">เหรียญทองแดง</p>
+                            <p class="text-4xl font-bold" id="bronzeCount">0</p>
+                        </div>
+                        <div class="text-6xl">🥉</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Top 3 Schools -->
+        <section class="mb-8">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">🏆 อันดับโรงเรียน TOP 3</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="topSchools">
+                <!-- Top schools will be populated here -->
+            </div>
+        </section>
+
+        <!-- Action Buttons -->
+        <section class="mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="openModal('matchModal')" class="btn-primary text-white py-4 px-6 rounded-xl font-medium text-lg">
+                    ➕ เพิ่มผลการแข่งขัน
+                </button>
+                <button onclick="openModal('sportModal')" class="btn-success text-white py-4 px-6 rounded-xl font-medium text-lg">
+                    🏃‍♂️ เพิ่มชนิดกีฬา
+                </button>
+                <button onclick="openModal('schoolModal')" class="btn-warning text-white py-4 px-6 rounded-xl font-medium text-lg">
+                    🏫 เพิ่มรายละเอียดโรงเรียน
+                </button>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="mb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-2xl card-shadow">
+                    <h4 class="text-xl font-bold text-gray-800 mb-4">📊 เปรียบเทียบเหรียญตามโรงเรียน</h4>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="medalChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl card-shadow">
+                    <h4 class="text-xl font-bold text-gray-800 mb-4">🏅 การกระจายเหรียญ</h4>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Table -->
+        <section class="mb-8">
+            <div class="bg-white rounded-2xl card-shadow overflow-hidden">
+                <div class="p-6 border-b">
+                    <h4 class="text-xl font-bold text-gray-800">📋 ตารางผลการแข่งขัน</h4>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase">ชนิดกีฬา</th>
+                                <th class="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase">โรงเรียน</th>
+                                <th class="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase">อันดับ</th>
+                                <th class="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase">เหรียญ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTable" class="divide-y divide-gray-200">
+                            <!-- Results will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Export Section -->
+        <section class="mb-8">
+            <div class="bg-white p-6 rounded-2xl card-shadow">
+                <h4 class="text-xl font-bold text-gray-800 mb-4">📤 ส่งออกข้อมูล</h4>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button onclick="exportToPDF()" class="flex items-center justify-center bg-red-500 hover:bg-red-600 text-white py-3 px-6 rounded-xl font-medium transition-colors">
+                        📄 ส่งออกเป็น PDF
+                    </button>
+                    <button onclick="exportToExcel()" class="flex items-center justify-center bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-xl font-medium transition-colors">
+                        📊 ส่งออกเป็น Excel
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <!-- Add Match Result Modal -->
+    <div id="matchModal" class="modal">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 card-shadow">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6">➕ เพิ่มผลการแข่งขัน</h3>
+            <form id="matchForm" onsubmit="addMatchResult(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">ชนิดกีฬา</label>
+                    <select id="sportSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        <option value="">เลือกชนิดกีฬา</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">โรงเรียน</label>
+                    <select id="schoolSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        <option value="">เลือกโรงเรียน</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">อันดับที่ได้</label>
+                    <select id="rankSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        <option value="">เลือกอันดับ</option>
+                        <option value="1">อันดับ 1 (เหรียญทอง 🥇)</option>
+                        <option value="2">อันดับ 2 (เหรียญเงิน 🥈)</option>
+                        <option value="3">อันดับ 3 (เหรียญทองแดง 🥉)</option>
+                    </select>
+                </div>
+                <div class="flex gap-4">
+                    <button type="submit" class="flex-1 btn-primary text-white py-3 px-6 rounded-lg font-medium">บันทึก</button>
+                    <button type="button" onclick="closeModal('matchModal')" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-lg font-medium transition-colors">ยกเลิก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Sport Modal -->
+    <div id="sportModal" class="modal">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 card-shadow">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6">🏃‍♂️ เพิ่มชนิดกีฬา</h3>
+            <form id="sportForm" onsubmit="addSport(event)">
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">ชื่อชนิดกีฬา</label>
+                    <input type="text" id="sportName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="เช่น ฟุตบอล, วอลเลย์บอล" required>
+                </div>
+                <div class="flex gap-4">
+                    <button type="submit" class="flex-1 btn-success text-white py-3 px-6 rounded-lg font-medium">บันทึก</button>
+                    <button type="button" onclick="closeModal('sportModal')" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-lg font-medium transition-colors">ยกเลิก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add School Modal -->
+    <div id="schoolModal" class="modal">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 card-shadow">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6">🏫 เพิ่มรายละเอียดโรงเรียน</h3>
+            <form id="schoolForm" onsubmit="addSchool(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">ชื่อโรงเรียน</label>
+                    <input type="text" id="schoolName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="เช่น โรงเรียนชุมชนบ้านสีแก้ว" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">ที่อยู่</label>
+                    <textarea id="schoolAddress" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="3" placeholder="ที่อยู่โรงเรียน"></textarea>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">เบอร์โทรศัพท์</label>
+                    <input type="tel" id="schoolPhone" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="เช่น 02-123-4567">
+                </div>
+                <div class="flex gap-4">
+                    <button type="submit" class="flex-1 btn-warning text-white py-3 px-6 rounded-lg font-medium">บันทึก</button>
+                    <button type="button" onclick="closeModal('schoolModal')" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-lg font-medium transition-colors">ยกเลิก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-lg mb-2">© 2025 ระบบรายงานผลการแข่งขันกีฬาโรงเรียนชุมชนบ้านสีแก้ว</p>
+            <p class="text-gray-400 mb-4">ออกแบบโดย นายปฐมพงศ์ ชนะพล</p>
+
+        </div>
+    </footer>
+
+    <script>
+        // Google Apps Script Configuration
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwea4WojLx6B6gufae8v6LQEMazBbBNbLkk9zJ6e7zRPsfyBky1uOkYqJ9TO1C9WtFExw/exec'; // Replace with your Apps Script URL
+        const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1FXifc33VgzEy8LZJel2jM1wYIcwY8Ksjl7riVo_YwB4/edit?gid=627983028#gid=627983028'; // Replace with your Google Sheet URL
+        
+        // Data storage
+        let schools = [];
+        let sports = [];
+        let results = [];
+
+        // Charts
+        let medalChart, pieChart;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDataFromGoogle();
+            initCharts();
+        });
+
+        // Google Apps Script Integration
+        async function loadDataFromGoogle() {
+            try {
+                // Load schools
+                const schoolsResponse = await fetch(`${APPS_SCRIPT_URL}?action=getSchools`);
+                const schoolsData = await schoolsResponse.json();
+                if (schoolsData.success) {
+                    schools = schoolsData.data;
+                }
+
+                // Load sports
+                const sportsResponse = await fetch(`${APPS_SCRIPT_URL}?action=getSports`);
+                const sportsData = await sportsResponse.json();
+                if (sportsData.success) {
+                    sports = sportsData.data;
+                }
+
+                // Load results
+                const resultsResponse = await fetch(`${APPS_SCRIPT_URL}?action=getResults`);
+                const resultsData = await resultsResponse.json();
+                if (resultsData.success) {
+                    results = resultsData.data.map(r => ({
+                        sport: r.sport,
+                        school: r.school,
+                        rank: parseInt(r.rank)
+                    }));
+                }
+
+                updateSelects();
+                updateDashboard();
+                updateCharts();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                // Use default data if Google connection fails
+                schools = [
+                    { name: 'โรงเรียนชุมชนบ้านสีแก้ว', address: 'บ้านสีแก้ว', phone: '02-123-4567' },
+                    { name: 'โรงเรียนวัดใหม่', address: 'ตำบลใหม่', phone: '02-234-5678' },
+                    { name: 'โรงเรียนบ้านเก่า', address: 'บ้านเก่า', phone: '02-345-6789' }
+                ];
+                sports = ['ฟุตบอล', 'วอลเลย์บอล', 'บาสเกตบอล', 'แบดมินตัน', 'เทเบิลเทนนิส'];
+                updateSelects();
+                updateDashboard();
+                updateCharts();
+            }
+        }
+
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // Update select options
+        function updateSelects() {
+            const sportSelect = document.getElementById('sportSelect');
+            const schoolSelect = document.getElementById('schoolSelect');
+            
+            sportSelect.innerHTML = '<option value="">เลือกชนิดกีฬา</option>';
+            sports.forEach(sport => {
+                sportSelect.innerHTML += `<option value="${sport}">${sport}</option>`;
+            });
+            
+            schoolSelect.innerHTML = '<option value="">เลือกโรงเรียน</option>';
+            schools.forEach(school => {
+                schoolSelect.innerHTML += `<option value="${school.name}">${school.name}</option>`;
+            });
+        }
+
+        // Add functions with Google Apps Script integration
+        async function addSport(event) {
+            event.preventDefault();
+            const sportName = document.getElementById('sportName').value.trim();
+            
+            if (sportName && !sports.includes(sportName)) {
+                try {
+                    const response = await fetch(APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'addSport',
+                            name: sportName
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        sports.push(sportName);
+                        updateSelects();
+                        document.getElementById('sportForm').reset();
+                        closeModal('sportModal');
+                        alert('✅ เพิ่มชนิดกีฬาเรียบร้อยแล้ว!');
+                    } else {
+                        alert('❌ เกิดข้อผิดพลาด: ' + result.error);
+                    }
+                } catch (error) {
+                    console.error('Error adding sport:', error);
+                    alert('❌ ไม่สามารถเชื่อมต่อกับ Google Sheets ได้');
+                }
+            } else {
+                alert('❌ ชนิดกีฬานี้มีอยู่แล้วหรือข้อมูลไม่ถูกต้อง');
+            }
+        }
+
+        async function addSchool(event) {
+            event.preventDefault();
+            const name = document.getElementById('schoolName').value.trim();
+            const address = document.getElementById('schoolAddress').value.trim();
+            const phone = document.getElementById('schoolPhone').value.trim();
+            
+            if (name && !schools.find(s => s.name === name)) {
+                try {
+                    const response = await fetch(APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'addSchool',
+                            name: name,
+                            address: address,
+                            phone: phone
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        schools.push({ name, address, phone });
+                        updateSelects();
+                        document.getElementById('schoolForm').reset();
+                        closeModal('schoolModal');
+                        alert('✅ เพิ่มโรงเรียนเรียบร้อยแล้ว!');
+                    } else {
+                        alert('❌ เกิดข้อผิดพลาด: ' + result.error);
+                    }
+                } catch (error) {
+                    console.error('Error adding school:', error);
+                    alert('❌ ไม่สามารถเชื่อมต่อกับ Google Sheets ได้');
+                }
+            } else {
+                alert('❌ โรงเรียนนี้มีอยู่แล้วหรือข้อมูลไม่ถูกต้อง');
+            }
+        }
+
+        async function addMatchResult(event) {
+            event.preventDefault();
+            const sport = document.getElementById('sportSelect').value;
+            const school = document.getElementById('schoolSelect').value;
+            const rank = parseInt(document.getElementById('rankSelect').value);
+            
+            if (sport && school && rank) {
+                try {
+                    const response = await fetch(APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'addResult',
+                            sport: sport,
+                            school: school,
+                            rank: rank
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        results.push({ sport, school, rank });
+                        updateDashboard();
+                        updateCharts();
+                        document.getElementById('matchForm').reset();
+                        closeModal('matchModal');
+                        alert('✅ บันทึกผลการแข่งขันเรียบร้อยแล้ว!');
+                    } else {
+                        alert('❌ เกิดข้อผิดพลาด: ' + result.error);
+                    }
+                } catch (error) {
+                    console.error('Error adding result:', error);
+                    alert('❌ ไม่สามารถเชื่อมต่อกับ Google Sheets ได้');
+                }
+            }
+        }
+
+        // Update dashboard
+        function updateDashboard() {
+            const medals = { gold: 0, silver: 0, bronze: 0 };
+            const schoolMedals = {};
+            
+            results.forEach(result => {
+                if (result.rank === 1) medals.gold++;
+                else if (result.rank === 2) medals.silver++;
+                else if (result.rank === 3) medals.bronze++;
+                
+                if (!schoolMedals[result.school]) {
+                    schoolMedals[result.school] = { gold: 0, silver: 0, bronze: 0, total: 0 };
+                }
+                
+                if (result.rank === 1) schoolMedals[result.school].gold++;
+                else if (result.rank === 2) schoolMedals[result.school].silver++;
+                else if (result.rank === 3) schoolMedals[result.school].bronze++;
+                
+                schoolMedals[result.school].total++;
+            });
+            
+            document.getElementById('goldCount').textContent = medals.gold;
+            document.getElementById('silverCount').textContent = medals.silver;
+            document.getElementById('bronzeCount').textContent = medals.bronze;
+            
+            updateTopSchools(schoolMedals);
+            updateResultsTable();
+        }
+
+        function updateTopSchools(schoolMedals) {
+            const topSchools = Object.entries(schoolMedals)
+                .sort(([,a], [,b]) => b.total - a.total)
+                .slice(0, 3);
+            
+            const topSchoolsContainer = document.getElementById('topSchools');
+            topSchoolsContainer.innerHTML = '';
+            
+            const positions = ['🥇 อันดับ 1', '🥈 อันดับ 2', '🥉 อันดับ 3'];
+            const classes = ['top-school', 'second-school', 'third-school'];
+            
+            topSchools.forEach(([school, medals], index) => {
+                topSchoolsContainer.innerHTML += `
+                    <div class="medal-card ${classes[index]} p-6 rounded-2xl card-shadow text-center">
+                        <h4 class="text-xl font-bold text-gray-800 mb-2">${positions[index]}</h4>
+                        <h5 class="text-lg font-semibold text-gray-700 mb-3">${school}</h5>
+                        <div class="flex justify-center gap-4 text-sm">
+                            <span>🥇 ${medals.gold}</span>
+                            <span>🥈 ${medals.silver}</span>
+                            <span>🥉 ${medals.bronze}</span>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-800 mt-2">รวม ${medals.total} เหรียญ</p>
+                    </div>
+                `;
+            });
+        }
+
+        function updateResultsTable() {
+            const tableBody = document.getElementById('resultsTable');
+            tableBody.innerHTML = '';
+            
+            results.forEach(result => {
+                const medalEmoji = result.rank === 1 ? '🥇' : result.rank === 2 ? '🥈' : '🥉';
+                const medalText = result.rank === 1 ? 'ทอง' : result.rank === 2 ? 'เงิน' : 'ทองแดง';
+                
+                tableBody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm text-gray-900">${result.sport}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${result.school}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">อันดับ ${result.rank}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${medalEmoji} ${medalText}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Initialize charts
+        function initCharts() {
+            const ctx1 = document.getElementById('medalChart').getContext('2d');
+            const ctx2 = document.getElementById('pieChart').getContext('2d');
+            
+            medalChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['โรงเรียนชุมชนบ้านสีแก้ว', 'โรงเรียนวัดใหม่', 'โรงเรียนบ้านเก่า'],
+                    datasets: [{
+                        label: 'เหรียญทอง',
+                        data: [0, 0, 0],
+                        backgroundColor: '#fbbf24',
+                        borderColor: '#f59e0b',
+                        borderWidth: 1
+                    }, {
+                        label: 'เหรียญเงิน',
+                        data: [0, 0, 0],
+                        backgroundColor: '#9ca3af',
+                        borderColor: '#6b7280',
+                        borderWidth: 1
+                    }, {
+                        label: 'เหรียญทองแดง',
+                        data: [0, 0, 0],
+                        backgroundColor: '#f97316',
+                        borderColor: '#ea580c',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    family: 'Kanit',
+                                    size: 12
+                                },
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            titleFont: {
+                                family: 'Kanit'
+                            },
+                            bodyFont: {
+                                family: 'Kanit'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: {
+                                    family: 'Kanit',
+                                    size: 11
+                                },
+                                stepSize: 1
+                            },
+                            grid: {
+                                color: '#f3f4f6'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    family: 'Kanit',
+                                    size: 10
+                                },
+                                maxRotation: 45
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+            
+            pieChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['เหรียญทอง', 'เหรียญเงิน', 'เหรียญทองแดง'],
+                    datasets: [{
+                        data: [1, 1, 1],
+                        backgroundColor: ['#fbbf24', '#9ca3af', '#f97316'],
+                        borderColor: ['#f59e0b', '#6b7280', '#ea580c'],
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    family: 'Kanit',
+                                    size: 12
+                                },
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            titleFont: {
+                                family: 'Kanit'
+                            },
+                            bodyFont: {
+                                family: 'Kanit'
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed * 100) / total).toFixed(1);
+                                    return context.label + ': ' + context.parsed + ' เหรียญ (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+
+        function updateCharts() {
+            const schoolMedals = {};
+            const totalMedals = { gold: 0, silver: 0, bronze: 0 };
+            
+            results.forEach(result => {
+                if (!schoolMedals[result.school]) {
+                    schoolMedals[result.school] = { gold: 0, silver: 0, bronze: 0 };
+                }
+                
+                if (result.rank === 1) {
+                    schoolMedals[result.school].gold++;
+                    totalMedals.gold++;
+                } else if (result.rank === 2) {
+                    schoolMedals[result.school].silver++;
+                    totalMedals.silver++;
+                } else if (result.rank === 3) {
+                    schoolMedals[result.school].bronze++;
+                    totalMedals.bronze++;
+                }
+            });
+            
+            // Update bar chart
+            const schoolNames = Object.keys(schoolMedals);
+            const goldData = schoolNames.map(school => schoolMedals[school].gold);
+            const silverData = schoolNames.map(school => schoolMedals[school].silver);
+            const bronzeData = schoolNames.map(school => schoolMedals[school].bronze);
+            
+            medalChart.data.labels = schoolNames;
+            medalChart.data.datasets[0].data = goldData;
+            medalChart.data.datasets[1].data = silverData;
+            medalChart.data.datasets[2].data = bronzeData;
+            medalChart.update();
+            
+            // Update pie chart
+            pieChart.data.datasets[0].data = [totalMedals.gold, totalMedals.silver, totalMedals.bronze];
+            pieChart.update();
+        }
+
+        // Export functions with Google Apps Script integration
+        async function exportToPDF() {
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'exportPDF'
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success && result.url) {
+                    window.open(result.url, '_blank');
+                    alert('✅ ส่งออก PDF เรียบร้อยแล้ว!');
+                } else {
+                    alert('❌ เกิดข้อผิดพลาดในการส่งออก PDF');
+                }
+            } catch (error) {
+                console.error('Error exporting PDF:', error);
+                alert('❌ ไม่สามารถเชื่อมต่อกับ Google Apps Script ได้');
+            }
+        }
+
+        async function exportToExcel() {
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'exportExcel'
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success && result.url) {
+                    window.open(result.url, '_blank');
+                    alert('✅ ส่งออก Excel เรียบร้อยแล้ว!');
+                } else {
+                    alert('❌ เกิดข้อผิดพลาดในการส่งออก Excel');
+                }
+            } catch (error) {
+                console.error('Error exporting Excel:', error);
+                alert('❌ ไม่สามารถเชื่อมต่อกับ Google Apps Script ได้');
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('show');
+            }
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'989cac5f475fce3d',t:'MTc1OTY2NDczMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
