@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบตรวจสอบผลการเรียนออนไลน์ - โรงเรียนชุมชนบ้านสีแก้ว</title>
+    
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for Thai characters -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom styles for the school's theme */
+        body {
+            font-family: 'Kanit', sans-serif;
+        }
+        /* Defining school colors for easy use with Tailwind */
+        .bg-school-green { background-color: #c1e1c1; } /* Pastel Green */
+        .text-school-green { color: #556b2f; } /* Dark Olive Green for text contrast */
+        .border-school-green { border-color: #556b2f; }
+        .hover\:bg-school-green-dark:hover { background-color: #b1d1b1; }
+        
+        .bg-school-red { background-color: #ffb3b3; } /* Pastel Red */
+        .text-school-red { color: #cd5c5c; } /* Indian Red for text contrast */
+        .border-school-red { border-color: #cd5c5c; }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+
+    <!-- Header Section -->
+    <header class="bg-school-green shadow-md">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <!-- Placeholder for School Logo -->
+                <img src="https://i.postimg.cc/CL1nWLPC/1-1.png" alt="โลโก้โรงเรียนชุมชนบ้านสีแก้ว" class="h-12 w-12 rounded-full border-2 border-white">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-700">โรงเรียนชุมชนบ้านสีแก้ว</h1>
+                    <p class="text-sm text-gray-600">สำนักงานเขตพื้นที่การศึกษาประถมศึกษาร้อยเอ็ด เขต 1</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 transform transition-all hover:scale-105 duration-300">
+            
+            <!-- Card Header -->
+            <div class="text-center mb-8">
+                <img src="https://i.postimg.cc/CL1nWLPC/1-1.png" alt="โลโก้โรงเรียน" class="mx-auto h-20 w-20 rounded-full mb-4 ring-4 ring-school-green ring-opacity-50">
+                <h2 class="text-2xl font-bold text-school-green">ระบบตรวจสอบผลการเรียนออนไลน์</h2>
+                <p class="text-gray-500 mt-1">ภาคเรียนที่ 1 ปีการศึกษา 2568</p>
+            </div>
+
+            <!-- Form for checking grades -->
+            <div align='center'>
+                <form action='https://a4501.obec.expert/services' method='POST' target='_blank' class="space-y-6">
+                    <div>
+                        <label for="idcard" class="block text-sm font-medium text-gray-700 text-left mb-1">เลขประจำตัวประชาชน 13 หลัก</label>
+                        <input 
+                            id="idcard"
+                            name='idcard' 
+                            style='text-align:center;' 
+                            type='text' 
+                            value='' 
+                            placeholder='กรอกเลขบัตรประชาชนของนักเรียน'
+                            maxlength="13"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-school-green focus:border-transparent transition"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <input name='schoolid' type='hidden' value='45010038' required />
+                        <button type='submit' class="w-full bg-school-green text-gray-800 font-semibold py-3 px-4 rounded-lg shadow-lg hover:bg-school-green-dark transition-transform transform hover:-translate-y-1 duration-300 ease-in-out flex items-center justify-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                            </svg>
+                            <span>ค้นหาผลการเรียน</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Note -->
+            <div class="text-center mt-6">
+                <div class="text-sm text-gray-700 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-left">
+                    <p class="font-bold text-school-red">หมายเหตุ:</p>
+                    <ul class="list-disc list-inside mt-1">
+                        <li>ระดับประถมศึกษาตัดสินผลการเรียนรายปี</li>
+                        <li>ระดับมัธยมศึกษาตัดสินผลการเรียนรายภาคเรียน</li>
+                    </ul>
+                </div>
+                <p class="text-xs text-gray-400 mt-4">ผลการเรียนจะแสดงในหน้าต่างใหม่</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="bg-school-green text-gray-700 text-center p-4 mt-8">
+        <p class="font-semibold">โรงเรียนชุมชนบ้านสีแก้ว</p>
+        <p class="text-sm text-gray-600">หมู่ที่ 5 บ้านสีแก้ว ตำบลสีแก้ว อำเภอเมืองร้อยเอ็ด จังหวัดร้อยเอ็ด 45000</p>
+        <p class="text-sm text-gray-600 mt-1">พัฒนาโดยคุณครูปฐมพงศ์ ชนะพล</p>
+        <p class="text-xs text-gray-500 mt-2">&copy; สงวนลิขสิทธิ์ 2568</p>
+    </footer>
+
+</body>
+</html>
+
