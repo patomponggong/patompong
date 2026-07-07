@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมตีตัวตุ่น แม่ ก กา (AR)</title>
+    
+    <!-- Google Fonts: Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --primary-font: 'Kanit', sans-serif;
+            --grass-color: #7CB342;
+            --grass-dark: #558B2F;
+            --sky-top: #4FC3F7;
+            --sky-bottom: #E1F5FE;
+            --wood-color: #8D6E63;
+            --wood-dark: #5D4037;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: var(--primary-font);
+            background: linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-bottom) 50%, var(--grass-color) 50%, var(--grass-dark) 100%);
+            touch-action: none;
+            user-select: none;
+        }
+
+        /* --- Background Scenery --- */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50px;
+            opacity: 0.8;
+            animation: floatCloud linear infinite;
+            z-index: 0;
+        }
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+        .c1 { top: 10%; width: 120px; height: 40px; animation-duration: 40s; left: -150px; }
+        .c1::before { width: 50px; height: 50px; top: -25px; left: 15px; }
+        .c1::after { width: 70px; height: 70px; top: -35px; right: 15px; }
+        
+        .c2 { top: 25%; width: 180px; height: 60px; animation-duration: 55s; animation-delay: 10s; left: -200px; transform: scale(0.8); }
+        .c2::before { width: 75px; height: 75px; top: -35px; left: 25px; }
+        .c2::after { width: 100px; height: 100px; top: -50px; right: 25px; }
+
+        .sun {
+            position: absolute;
+            top: 5%;
+            right: 5%;
+            width: clamp(80px, 15vw, 120px);
+            height: clamp(80px, 15vw, 120px);
+            background: #FFEB3B;
+            border-radius: 50%;
+            box-shadow: 0 0 40px #FFC107, 0 0 80px #FF9800;
+            animation: pulseSun 3s infinite alternate;
+            z-index: 0;
+        }
+
+        @keyframes floatCloud {
+            from { transform: translateX(-200px); }
+            to { transform: translateX(110vw); }
+        }
+        @keyframes pulseSun {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        /* --- Camera & AR Elements --- */
+        #video-element { display: none; }
+        #canvas-element {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror */
+            opacity: 0.4;
+            z-index: 1;
+        }
+
+        #game-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass if needed, but we use AR */
+        }
+
+        .ar-hammer {
+            position: absolute;
+            font-size: clamp(4rem, 8vw, 6rem);
+            transform: translate(-20%, -80%); /* Offset so tip of finger is the hitting part */
+            pointer-events: none;
+            z-index: 50;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+            transition: transform 0.1s;
+        }
+        .ar-hammer.hitting {
+            transform: translate(-20%, -80%) rotate(-45deg);
+        }
+
+        .hand-warning {
+            position: absolute;
+            top: 20%; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 10px 30px;
+            border-radius: 50px;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 800;
+            border: 4px solid white;
+            animation: blinkWarning 1s infinite;
+            z-index: 40;
+            display: none;
+        }
+        @keyframes blinkWarning { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* --- Game Grid & Moles --- */
+        .grid-container {
+            position: absolute;
+            bottom: 2%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(10px, 3vw, 40px);
+            width: 90vw;
+            max-width: 900px;
+            z-index: 10;
+        }
+
+        .hole-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            overflow: hidden;
+            border-radius: 20px;
+        }
+
+        .hole-ground {
+            position: absolute;
+            bottom: -10%;
+            width: 90%;
+            height: 40%;
+            background: #3E2723;
+            border-radius: 50%;
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.8);
+            z-index: 2;
+        }
+
+        .mole {
+            position: absolute;
+            bottom: 15%;
+            width: 60%;
+            height: 80%;
+            background: #795548;
+            border-radius: 50% 50% 10% 10%;
+            transform: translateY(150%);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.3);
+        }
+
+        .mole.up { transform: translateY(0); }
+        .mole.hit { transform: translateY(150%) scale(0.9); opacity: 0.5; }
+
+        /* Mole Face */
+        .mole::before {
+            content: ''; position: absolute; top: 25%; left: 20%; width: 15%; height: 15%; background: black; border-radius: 50%;
+        }
+        .mole::after {
+            content: ''; position: absolute; top: 25%; right: 20%; width: 15%; height: 15%; background: black; border-radius: 50%;
+        }
+        .mole-nose {
+            position: absolute; top: 40%; width: 30%; height: 20%; background: #FFB0B0; border-radius: 50%; z-index: 2;
+        }
+        
+        /* Word Board on Mole */
+        .word-board {
+            position: absolute;
+            top: -30%;
+            background: white;
+            border: 4px solid var(--wood-color);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: clamp(1.2rem, 3.5vw, 2.5rem);
+            font-weight: 800;
+            color: #333;
+            white-space: nowrap;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+            transition: background 0.2s, color 0.2s;
+        }
+        .mole.hit-correct .word-board { background: #4CAF50; color: white; border-color: #2E7D32; }
+        .mole.hit-wrong .word-board { background: #F44336; color: white; border-color: #C62828; }
+
+        /* --- UI Elements --- */
+        .wood-panel {
+            background: var(--wood-color);
+            border: 6px solid var(--wood-dark);
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4), inset 0 5px 10px rgba(255,255,255,0.2);
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+        }
+
+        .hud-container {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 5%;
+            z-index: 20;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+
+        .hud-box {
+            padding: 10px 30px;
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .timer-red { color: #FF5252; animation: pulseRed 0.5s infinite alternate; }
+        @keyframes pulseRed { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        /* Floating Score Text */
+        .float-score {
+            position: absolute;
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 100;
+            animation: floatUp 1s ease-out forwards;
+            text-shadow: 0 0 10px white, 0 0 20px white;
+        }
+        .float-correct { color: #4CAF50; }
+        .float-wrong { color: #F44336; }
+        
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            50% { transform: translateY(-100px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-150px) scale(1); opacity: 0; }
+        }
+
+        /* --- Screens --- */
+        .screen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(5px);
+        }
+        .hidden { display: none !important; }
+
+        .title-text {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 800;
+            color: #FFEB3B;
+            -webkit-text-stroke: 3px #E65100;
+            text-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            text-align: center;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .instruction-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: clamp(15px, 4vw, 30px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            color: #333;
+            border: 4px solid var(--grass-color);
+        }
+
+        .inst-rule {
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            font-weight: 600;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .btn-start {
+            margin-top: 30px;
+            background: #FF9800;
+            border: 4px solid white;
+            color: white;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            padding: 15px 50px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 0 #E65100, 0 20px 30px rgba(0,0,0,0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
+            pointer-events: auto;
+            animation: bounceBtn 2s infinite;
+        }
+        .btn-start:active {
+            transform: translateY(10px);
+            box-shadow: 0 0 0 #E65100, 0 5px 10px rgba(0,0,0,0.4);
+        }
+        @keyframes bounceBtn {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+
+        .stat-text {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 600;
+            margin: 5px 0;
+        }
+        .final-score {
+            font-size: clamp(4rem, 10vw, 8rem);
+            font-weight: 900;
+            color: #4CAF50;
+            text-shadow: 2px 2px 0 white, -2px -2px 0 white, 2px -2px 0 white, -2px 2px 0 white;
+            margin: -10px 0 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Elements -->
+    <div class="sun"></div>
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+
+    <!-- MediaPipe Video & Canvas -->
+    <video id="video-element" autoplay playsinline></video>
+    <canvas id="canvas-element"></canvas>
+
+    <!-- Game Layer -->
+    <div id="game-layer">
+        
+        <!-- HUD -->
+        <div class="hud-container hidden" id="hud">
+            <div class="wood-panel hud-box" id="time-display">
+                ⏱️ <span id="time-val">60</span>
+            </div>
+            <div class="wood-panel hud-box">
+                🏆 <span id="score-val">0</span>
+            </div>
+        </div>
+
+        <!-- Hand Warning -->
+        <div class="hand-warning" id="hand-warning">
+            ยกมือขึ้นให้กล้องเห็น! 👋
+        </div>
+
+        <!-- Game Grid -->
+        <div class="grid-container hidden" id="game-grid">
+            <!-- 9 Holes generated by JS -->
+        </div>
+
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen">
+        <h1 class="title-text wood-panel" style="padding: 10px 40px; border-radius: 40px;">
+            เกมตีตัวตุ่น<br>แม่ ก กา 🔨
+        </h1>
+        
+        <div class="instruction-card">
+            <h2 style="font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; color: var(--wood-dark); margin-bottom: 20px;">วิธีเล่น (ใช้มือบังคับค้อน)</h2>
+            <div class="inst-rule">
+                <span class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-2xl shadow">1</span>
+                <span>ตีคำ <b>"แม่ ก กา"</b> (ไม่มีตัวสะกด) <span class="text-green-600 font-bold">+10 คะแนน</span></span>
+            </div>
+            <div class="inst-rule">
+                <span class="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center font-bold text-2xl shadow">2</span>
+                <span>ห้ามตี <b>"คำมีตัวสะกด"</b> <span class="text-red-600 font-bold">-5 คะแนน</span></span>
+            </div>
+            <div class="inst-rule">
+                <span class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-2xl shadow">3</span>
+                <span>จับเวลา <b>60 วินาที</b> แข่งทำคะแนนให้มากที่สุด!</span>
+            </div>
+            
+            <button class="btn-start" onclick="startGame()">เริ่มเกมเลย!</button>
+            <p id="loading-cam-msg" class="mt-4 text-gray-500 font-bold animate-pulse">กำลังเตรียมกล้อง AR...</p>
+        </div>
+    </div>
+
+    <!-- End Screen -->
+    <div id="end-screen" class="screen hidden">
+        <div class="instruction-card" style="border-color: #FF9800;">
+            <h1 class="title-text" style="color: #F44336; -webkit-text-stroke: 2px white; margin-bottom: 0;">หมดเวลา!</h1>
+            <p style="font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; color: #555;">คะแนนรวมของคุณ</p>
+            <div class="final-score" id="final-score-val">0</div>
+            
+            <p class="stat-text text-green-600">ตีถูก (แม่ ก กา): <span id="stat-correct">0</span> ครั้ง</p>
+            <p class="stat-text text-red-600">ตีผิด (มีตัวสะกด): <span id="stat-wrong">0</span> ครั้ง</p>
+            
+            <h2 id="praise-text" style="font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; color: var(--wood-color); margin: 20px 0;">เก่งมาก!</h2>
+            
+            <button class="btn-start" style="margin-top: 10px; background: #4CAF50; box-shadow: 0 10px 0 #2E7D32;" onclick="startGame()">เล่นอีกครั้ง</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Educational Content (Word Lists) ---
+        const wordsTarget = ['ปลา', 'หมา', 'ตา', 'ขา', 'ปู', 'งู', 'หู', 'มือ', 'เสือ', 'เรือ', 'ไก่', 'นา', 'ดี', 'สี', 'ผี', 'ชา', 'โต๊ะ', 'เก้าอี้', 'หัว', 'ใจ']; // แม่ ก กา
+        const wordsAvoid = ['เดือน', 'นก', 'ปาก', 'กิน', 'ลม', 'ฝน', 'คน', 'บ้าน', 'นอน', 'จาน', 'แมว', 'ช้าง', 'ลิง', 'เป็ด', 'มด', 'หมู']; // มีตัวสะกด (หมู ก กา, แต่มดมี กด, let's keep it clean)
+        // Correction on wordsAvoid: หมู is แม่ ก กา. I'll replace it to be strictly final consonants.
+        const wordsAvoidClean = ['เดือน', 'นก', 'ปาก', 'กิน', 'ลม', 'ฝน', 'คน', 'บ้าน', 'นอน', 'จาน', 'แมว', 'ช้าง', 'ลิง', 'เป็ด', 'มด', 'กบ', 'ดาว', 'ยาย'];
+
+        // --- Game State Variables ---
+        let score = 0;
+        let timeLeft = 60;
+        let gameActive = false;
+        let statCorrect = 0;
+        let statWrong = 0;
+        let timerInterval;
+        let spawnTimeout;
+        let cameraReady = false;
+        
+        // --- Web Audio API (Synthesizer) ---
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+            
+            if (type === 'spawn') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(500, now + 0.1);
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.2, now + 0.05);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'correct') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.setValueAtTime(800, now + 0.1);
+                gainNode.gain.setValueAtTime(0.5, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                gainNode.gain.setValueAtTime(0.5, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'over') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(200, now + 1);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 1);
+                osc.start(now);
+                osc.stop(now + 1);
+            }
+        }
+
+        // --- DOM Elements ---
+        const gridContainer = document.getElementById('game-grid');
+        const scoreVal = document.getElementById('score-val');
+        const timeVal = document.getElementById('time-val');
+        const timeDisplay = document.getElementById('time-display');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+        const hud = document.getElementById('hud');
+        const gameLayer = document.getElementById('game-layer');
+        const handWarning = document.getElementById('hand-warning');
+        const loadingMsg = document.getElementById('loading-cam-msg');
+        
+        let holes = []; // Array to store DOM references for 9 holes
+
+        // --- Initialize Grid ---
+        function createGrid() {
+            gridContainer.innerHTML = '';
+            holes = [];
+            for (let i = 0; i < 9; i++) {
+                const holeCont = document.createElement('div');
+                holeCont.className = 'hole-container';
+                
+                const ground = document.createElement('div');
+                ground.className = 'hole-ground';
+                
+                const mole = document.createElement('div');
+                mole.className = 'mole';
+                mole.id = `mole-${i}`;
+                mole.dataset.active = 'false';
+                mole.dataset.type = ''; // 'target' or 'avoid'
+                
+                const nose = document.createElement('div');
+                nose.className = 'mole-nose';
+                
+                const wordBoard = document.createElement('div');
+                wordBoard.className = 'word-board';
+                wordBoard.innerText = '';
+
+                mole.appendChild(wordBoard);
+                mole.appendChild(nose);
+                
+                holeCont.appendChild(ground);
+                holeCont.appendChild(mole);
+                gridContainer.appendChild(holeCont);
+                
+                holes.push({
+                    element: mole,
+                    board: wordBoard,
+                    timeoutId: null
+                });
+            }
+        }
+
+        // --- Game Logic ---
+        function startGame() {
+            if (!cameraReady) return; // Prevent starting if AR not loaded
+
+            initAudio(); // Required to unlock Web Audio on interaction
+            
+            // Reset Stats
+            score = 0;
+            timeLeft = 60;
+            statCorrect = 0;
+            statWrong = 0;
+            gameActive = true;
+            
+            updateScoreUI();
+            timeVal.innerText = timeLeft;
+            timeDisplay.classList.remove('timer-red');
+            
+            // UI Transition
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            hud.classList.remove('hidden');
+            gridContainer.classList.remove('hidden');
+            
+            // Clear any active moles
+            holes.forEach(h => hideMole(h, false));
+            
+            // Start Loops
+            timerInterval = setInterval(updateTime, 1000);
+            scheduleNextSpawn();
+        }
+
+        function updateTime() {
+            timeLeft--;
+            timeVal.innerText = timeLeft;
+            
+            if (timeLeft <= 10) {
+                timeDisplay.classList.add('timer-red');
+            }
+            
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            clearTimeout(spawnTimeout);
+            holes.forEach(h => hideMole(h, false));
+            
+            playSound('over');
+            
+            // Update End Screen
+            document.getElementById('final-score-val').innerText = score;
+            document.getElementById('stat-correct').innerText = statCorrect;
+            document.getElementById('stat-wrong').innerText = statWrong;
+            
+            let praise = "พยายามได้ดี!";
+            if (score > 150) praise = "อัจฉริยะภาษาไทย! 👑";
+            else if (score > 80) praise = "เก่งมากๆ เลย! 🌟";
+            else if (score > 30) praise = "เยี่ยมมาก! 👍";
+            
+            document.getElementById('praise-text').innerText = praise;
+            
+            gridContainer.classList.add('hidden');
+            hud.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+        }
+
+        function scheduleNextSpawn() {
+            if (!gameActive) return;
+            
+            // Calculate speed based on time left (gets faster)
+            let baseDelay = 800;
+            if (timeLeft < 40) baseDelay = 600;
+            if (timeLeft < 20) baseDelay = 400;
+            if (timeLeft < 10) baseDelay = 250;
+            
+            const randomDelay = baseDelay + Math.random() * 500;
+            
+            spawnTimeout = setTimeout(() => {
+                spawnMole();
+                scheduleNextSpawn();
+            }, randomDelay);
+        }
+
+        function spawnMole() {
+            // Find inactive holes
+            const inactiveHoles = holes.filter(h => h.element.dataset.active === 'false');
+            if (inactiveHoles.length === 0) return;
+            
+            // Pick random hole
+            const hole = inactiveHoles[Math.floor(Math.random() * inactiveHoles.length)];
+            
+            // Determine type (55% target/แม่ ก กา)
+            const isTarget = Math.random() < 0.55;
+            const wordList = isTarget ? wordsTarget : wordsAvoidClean;
+            const word = wordList[Math.floor(Math.random() * wordList.length)];
+            
+            // Setup Mole
+            hole.element.dataset.active = 'true';
+            hole.element.dataset.type = isTarget ? 'target' : 'avoid';
+            hole.element.dataset.hit = 'false';
+            hole.element.classList.remove('hit', 'hit-correct', 'hit-wrong');
+            hole.board.innerText = word;
+            
+            // Pop up
+            hole.element.classList.add('up');
+            playSound('spawn');
+            
+            // Calculate stay duration
+            let stayTime = 1000 + Math.random() * 800;
+            if (timeLeft < 30) stayTime *= 0.8; // Stay less time when game is fast
+            
+            hole.timeoutId = setTimeout(() => {
+                hideMole(hole, false);
+            }, stayTime);
+        }
+
+        function hideMole(hole, wasHit) {
+            if (hole.timeoutId) clearTimeout(hole.timeoutId);
+            hole.element.classList.remove('up');
+            hole.element.dataset.active = 'false';
+        }
+
+        function hitMole(holeElement, hitX, hitY) {
+            if (!gameActive || holeElement.dataset.active === 'false' || holeElement.dataset.hit === 'true') return;
+            
+            holeElement.dataset.hit = 'true';
+            const isTarget = holeElement.dataset.type === 'target';
+            
+            if (isTarget) {
+                // Correct Hit (แม่ ก กา)
+                score += 10;
+                statCorrect++;
+                holeElement.classList.add('hit-correct');
+                playSound('correct');
+                showFloatingText('+10', hitX, hitY, true);
+            } else {
+                // Wrong Hit (มีตัวสะกด)
+                score = Math.max(0, score - 5); // Floor at 0
+                statWrong++;
+                holeElement.classList.add('hit-wrong');
+                playSound('wrong');
+                showFloatingText('-5', hitX, hitY, false);
+            }
+            
+            updateScoreUI();
+            holeElement.classList.add('hit');
+            
+            // Find hole obj to clear timeout
+            const holeObj = holes.find(h => h.element.id === holeElement.id);
+            if (holeObj) {
+                clearTimeout(holeObj.timeoutId);
+                setTimeout(() => hideMole(holeObj, true), 300); // Small delay to show hit state
+            }
+        }
+
+        function updateScoreUI() {
+            scoreVal.innerText = score;
+            // Add a little pop animation to score
+            scoreVal.parentElement.style.transform = 'scale(1.2)';
+            setTimeout(() => { scoreVal.parentElement.style.transform = 'scale(1)'; }, 100);
+        }
+
+        function showFloatingText(text, x, y, isCorrect) {
+            const floatEl = document.createElement('div');
+            floatEl.className = `float-score ${isCorrect ? 'float-correct' : 'float-wrong'}`;
+            floatEl.innerText = text;
+            floatEl.style.left = `${x}px`;
+            floatEl.style.top = `${y}px`;
+            
+            gameLayer.appendChild(floatEl);
+            
+            // Remove after animation (1s)
+            setTimeout(() => {
+                if (floatEl.parentNode) floatEl.parentNode.removeChild(floatEl);
+            }, 1000);
+        }
+
+        // --- MediaPipe AR Logic ---
+        const videoElement = document.getElementById('video-element');
+        const canvasElement = document.getElementById('canvas-element');
+        const canvasCtx = canvasElement.getContext('2d');
+        
+        // Setup Hands Model
+        const hands = new Hands({locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+        }});
+        
+        hands.setOptions({
+            maxNumHands: 2,
+            modelComplexity: 0, // 0 for max speed/low-end devices
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+        
+        let activeHammers = {}; // Store hammer DOM elements by hand index
+        let lastHandDetectionTime = Date.now();
+
+        hands.onResults((results) => {
+            // Resize canvas to match window
+            if (canvasElement.width !== window.innerWidth || canvasElement.height !== window.innerHeight) {
+                canvasElement.width = window.innerWidth;
+                canvasElement.height = window.innerHeight;
+            }
+
+            // Draw video to canvas (Background)
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.restore();
+
+            const currentTime = Date.now();
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                lastHandDetectionTime = currentTime;
+                handWarning.style.display = 'none';
+
+                // Keep track of which hands are currently seen
+                const seenHands = new Set();
+
+                for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+                    seenHands.add(i);
+                    const landmarks = results.multiHandLandmarks[i];
+                    
+                    // Landmark 8 is Index Finger Tip
+                    const indexTip = landmarks[8];
+                    
+                    // Map normalized coordinates (0-1) to screen pixels
+                    // NOTE: Video is mirrored (scaleX(-1) in CSS), so we must flip X coordinate!
+                    const screenX = (1 - indexTip.x) * window.innerWidth; 
+                    const screenY = indexTip.y * window.innerHeight;
+
+                    // Manage Hammer DOM element
+                    let hammerEl = activeHammers[i];
+                    if (!hammerEl) {
+                        hammerEl = document.createElement('div');
+                        hammerEl.className = 'ar-hammer';
+                        hammerEl.innerText = '🔨';
+                        gameLayer.appendChild(hammerEl);
+                        activeHammers[i] = hammerEl;
+                    }
+
+                    // Update Hammer Position
+                    hammerEl.style.left = `${screenX}px`;
+                    hammerEl.style.top = `${screenY}px`;
+
+                    // Collision Detection (Only if game is active)
+                    if (gameActive) {
+                        checkCollision(screenX, screenY, hammerEl);
+                    }
+                }
+
+                // Remove hammers for hands that disappeared
+                Object.keys(activeHammers).forEach(key => {
+                    if (!seenHands.has(parseInt(key))) {
+                        activeHammers[key].remove();
+                        delete activeHammers[key];
+                    }
+                });
+
+            } else {
+                // No hands detected
+                Object.values(activeHammers).forEach(h => h.remove());
+                activeHammers = {};
+                
+                // Show warning if no hands seen for > 1 second during active game
+                if (gameActive && currentTime - lastHandDetectionTime > 1000) {
+                    handWarning.style.display = 'block';
+                }
+            }
+        });
+
+        // Simple distance-based collision detection
+        function checkCollision(hx, hy, hammerEl) {
+            // Threshold for hitting (adjust based on screen size, approx 60px)
+            const hitRadius = window.innerWidth < 600 ? 50 : 80;
+
+            for (let i = 0; i < holes.length; i++) {
+                const hole = holes[i];
+                if (hole.element.dataset.active === 'true' && hole.element.dataset.hit === 'false') {
+                    // Get bounding box of the mole to find its center
+                    const rect = hole.element.getBoundingClientRect();
+                    const moleCenterX = rect.left + rect.width / 2;
+                    const moleCenterY = rect.top + rect.height / 2;
+
+                    // Calculate distance from hammer tip to mole center
+                    const dist = Math.hypot(hx - moleCenterX, hy - moleCenterY);
+
+                    if (dist < hitRadius) {
+                        // HIT!
+                        // Animate hammer
+                        hammerEl.classList.add('hitting');
+                        setTimeout(() => hammerEl.classList.remove('hitting'), 150);
+                        
+                        hitMole(hole.element, hx, hy);
+                        break; // Only hit one mole at a time per hand
+                    }
+                }
+            }
+        }
+
+        // Initialize Camera
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await hands.send({image: videoElement});
+            },
+            width: 640,
+            height: 480
+        });
+
+        // Start Camera and Setup UI
+        createGrid();
+        
+        camera.start()
+            .then(() => {
+                cameraReady = true;
+                loadingMsg.innerText = "กล้องพร้อมแล้ว!";
+                loadingMsg.classList.remove('animate-pulse');
+                loadingMsg.classList.add('text-green-600');
+            })
+            .catch(err => {
+                loadingMsg.innerText = "ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้กล้องและรีเฟรชหน้าเว็บ";
+                loadingMsg.classList.remove('animate-pulse');
+                loadingMsg.classList.add('text-red-600');
+                console.error("Camera error:", err);
+            });
+
+        // Handle window resize to maintain grid layout properly
+        window.addEventListener('resize', () => {
+            if (canvasElement.width !== window.innerWidth) {
+                canvasElement.width = window.innerWidth;
+                canvasElement.height = window.innerHeight;
+            }
+        });
+
+    </script>
+</body>
+</html>
