@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>เกมตีตัวตุ่น แม่ ก กา</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#7ec8f0; --sky-mid:#bfe6ff; --grass-top:#8bd04a; --grass:#6bbf3a; --grass-dk:#4e9e2a;
+    --wood:#b6772f; --wood-dk:#8a561f; --wood-lt:#e0a45b;
+    --good:#2fbf5a; --bad:#e23b3b; --cream:#fff7e6; --ink:#4a2c12;
+    --shadow:rgba(0,0,0,.22);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;font-family:'Kanit',sans-serif;color:var(--ink)}
+  body{background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 45%,var(--grass-top) 62%,var(--grass) 100%)}
+
+  #cam{position:absolute;top:0;left:0;width:2px;height:2px;opacity:0;pointer-events:none}
+
+  .screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+  .screen.active{display:flex}
+
+  /* ---------- ท้องฟ้าประดับ ---------- */
+  .sun{position:absolute;top:5vh;right:8vw;width:clamp(70px,12vw,150px);height:clamp(70px,12vw,150px);background:radial-gradient(circle at 40% 40%,#fff3a0,#ffd23d 60%,#ffb703);border-radius:50%;box-shadow:0 0 0 10px rgba(255,224,102,.35),0 0 60px rgba(255,200,40,.6);animation:sunpulse 4s ease-in-out infinite}
+  @keyframes sunpulse{50%{transform:scale(1.06)}}
+  .cloud{position:absolute;background:#fff;border-radius:50%;filter:drop-shadow(0 8px 12px rgba(0,0,0,.06));opacity:.95}
+  .cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+  .c1{width:120px;height:120px;top:10vh;left:10vw;animation:drift 26s linear infinite}
+  .c1::before{width:80px;height:80px;top:30px;left:-45px}
+  .c1::after{width:95px;height:95px;top:20px;left:60px}
+  .c2{width:90px;height:90px;top:22vh;left:60vw;animation:drift 34s linear infinite}
+  .c2::before{width:60px;height:60px;top:25px;left:-35px}
+  .c2::after{width:70px;height:70px;top:18px;left:45px}
+  @keyframes drift{from{transform:translateX(-8vw)}to{transform:translateX(8vw)}}
+
+  /* ---------- ป้ายไม้หัวเรื่อง 3 มิติ ---------- */
+  .wood-sign{position:relative;background:linear-gradient(180deg,var(--wood-lt),var(--wood) 55%,var(--wood-dk));border:5px solid var(--wood-dk);border-radius:22px;
+    box-shadow:0 10px 0 var(--wood-dk),0 18px 26px var(--shadow),inset 0 4px 10px rgba(255,255,255,.28),inset 0 -8px 14px rgba(0,0,0,.28);
+    padding:clamp(14px,3vw,30px) clamp(24px,6vw,64px);text-align:center}
+  .wood-sign::before,.wood-sign::after{content:"";position:absolute;width:16px;height:16px;background:#5c3a15;border-radius:50%;box-shadow:inset 0 2px 3px rgba(0,0,0,.6)}
+  .wood-sign::before{top:12px;left:14px}.wood-sign::after{top:12px;right:14px}
+
+  .title{font-weight:900;font-size:clamp(30px,7.5vw,74px);color:#fff8e6;line-height:1.05;letter-spacing:1px;
+    text-shadow:0 3px 0 var(--wood-dk),0 5px 0 #5c3a15,0 8px 12px rgba(0,0,0,.4);animation:bob 2.6s ease-in-out infinite}
+  @keyframes bob{50%{transform:translateY(-8px)}}
+  .subtitle{margin-top:6px;font-weight:600;font-size:clamp(15px,2.6vw,24px);color:#fff2d6;text-shadow:0 2px 0 var(--wood-dk)}
+
+  /* ---------- การ์ดวิธีเล่น ---------- */
+  .panel{background:var(--cream);border:5px solid #fff;border-radius:26px;box-shadow:0 12px 0 rgba(0,0,0,.12),0 20px 34px var(--shadow);
+    padding:clamp(16px,3vw,26px);max-width:min(92vw,780px);margin-top:clamp(16px,3vh,28px)}
+  .how{display:flex;gap:clamp(10px,2.4vw,22px);justify-content:center;flex-wrap:wrap}
+  .step{flex:1 1 180px;min-width:150px;background:#fff;border-radius:20px;padding:16px 14px 18px;text-align:center;box-shadow:0 6px 14px rgba(0,0,0,.1);border:3px solid #ffe6b0}
+  .num{width:clamp(40px,7vw,58px);height:clamp(40px,7vw,58px);margin:0 auto 8px;border-radius:50%;display:grid;place-items:center;
+    font-weight:900;font-size:clamp(20px,3.6vw,30px);color:#fff;background:linear-gradient(160deg,#ffb43d,#ff8a2b);box-shadow:0 5px 0 #e0691c}
+  .step p{font-weight:600;font-size:clamp(14px,2.3vw,19px);line-height:1.35}
+  .step .emoji{font-size:clamp(26px,5vw,40px);display:block;margin-bottom:2px}
+
+  .rules{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+  .rule{font-weight:700;font-size:clamp(15px,2.6vw,22px);padding:10px 20px;border-radius:999px;color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.18)}
+  .rule.g{background:var(--good);box-shadow:0 5px 0 #1c8a3e}
+  .rule.b{background:var(--bad);box-shadow:0 5px 0 #a82323}
+  .rule.t{background:#3a86ff;box-shadow:0 5px 0 #245fc0}
+
+  /* ---------- ปุ่มใหญ่ ---------- */
+  .big-btn{margin-top:clamp(18px,3.4vh,32px);font-family:inherit;font-weight:900;font-size:clamp(24px,5vw,44px);color:#fff;cursor:pointer;
+    padding:clamp(14px,2.4vh,22px) clamp(34px,7vw,70px);border:none;border-radius:999px;
+    background:linear-gradient(160deg,#ff7b54,#ff4d4d);box-shadow:0 9px 0 #c0342f,0 16px 26px var(--shadow);
+    letter-spacing:1px;animation:pop 1.5s ease-in-out infinite}
+  .big-btn:active{transform:translateY(6px);box-shadow:0 3px 0 #c0342f,0 8px 14px var(--shadow)}
+  @keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .big-btn.loading{animation:none;background:#c9a24a;box-shadow:0 9px 0 #96762f}
+
+  .deco-mole{position:absolute;bottom:-8px;width:clamp(70px,12vw,130px);filter:drop-shadow(0 6px 8px rgba(0,0,0,.25))}
+  .deco-mole.left{left:2vw;transform:rotate(-8deg)}
+  .deco-mole.right{right:2vw;transform:rotate(8deg) scaleX(-1)}
+
+  .errbox{margin-top:16px;background:#ffe1e1;border:3px solid var(--bad);color:#a11;border-radius:16px;padding:12px 18px;font-weight:600;font-size:clamp(14px,2.4vw,18px);max-width:90vw;display:none;text-align:center}
+  .errbox.show{display:block}
+
+  /* ---------- หน้าเล่น ---------- */
+  #play{justify-content:flex-start}
+  .field{position:relative;width:100%;height:100%;overflow:hidden}
+  .field::after{content:"";position:absolute;inset:58% 0 0 0;background:
+    repeating-linear-gradient(90deg,transparent 0 26px,rgba(0,0,0,.04) 26px 52px);pointer-events:none}
+
+  .hud{position:absolute;top:clamp(10px,2vh,22px);z-index:40;display:flex;align-items:center;gap:10px;
+    background:linear-gradient(180deg,var(--wood-lt),var(--wood));border:4px solid var(--wood-dk);border-radius:18px;
+    padding:clamp(6px,1.4vh,12px) clamp(14px,2.6vw,26px);box-shadow:0 6px 0 var(--wood-dk),0 12px 18px var(--shadow)}
+  .hud .ic{font-size:clamp(24px,4.4vw,40px);line-height:1}
+  .hud .lbl{font-weight:600;font-size:clamp(12px,1.8vw,16px);color:#fff2d6;text-shadow:0 1px 0 var(--wood-dk)}
+  .hud .val{font-weight:900;font-size:clamp(28px,5.5vw,52px);color:#fff;text-shadow:0 3px 0 var(--wood-dk);line-height:1;min-width:1.6ch;text-align:center}
+  #timeHud{left:clamp(10px,2vw,26px)}
+  #scoreHud{right:clamp(10px,2vw,26px)}
+  #timeHud.danger .val{color:#ffde59;animation:flash .5s steps(1) infinite}
+  @keyframes flash{50%{color:#ff2a2a;transform:scale(1.15)}}
+
+  .grid{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);
+    width:min(92vw,900px);display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(8px,2vw,26px)}
+  .hole{position:relative;aspect-ratio:1/.9}
+  .hole .back{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);width:86%;height:42%;
+    background:radial-gradient(ellipse at 50% 35%,#4a2f16,#301d0c);border-radius:50%;box-shadow:inset 0 8px 12px rgba(0,0,0,.6)}
+  .hole .mole{position:absolute;left:50%;bottom:8%;transform:translate(-50%,55%) scale(.28);opacity:0;width:74%;
+    transition:transform .17s cubic-bezier(.34,1.7,.5,1),opacity .13s;transform-origin:50% 100%;z-index:2}
+  .hole.up .mole{transform:translate(-50%,-4%) scale(1);opacity:1}
+  .hole.whacked .mole{transform:translate(-50%,42%) scale(.7) rotate(6deg);opacity:.85;transition:transform .18s ease-in}
+  .hole.wrong .mole{animation:shake .22s ease}
+  @keyframes shake{25%{transform:translate(-58%,-4%) scale(1)}75%{transform:translate(-42%,-4%) scale(1)}}
+  .hole .lip{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);width:92%;height:26%;
+    background:linear-gradient(180deg,var(--grass-top),var(--grass-dk));border-radius:50%;z-index:3;box-shadow:0 4px 6px rgba(0,0,0,.25)}
+  .hole .label{position:absolute;left:50%;bottom:82%;transform:translate(-50%,10px);z-index:4;
+    background:#fff;border:3px solid #ffcf6b;border-radius:14px;padding:2px 14px;font-weight:800;
+    font-size:clamp(20px,3.6vw,40px);color:var(--ink);white-space:nowrap;opacity:0;transition:opacity .12s,transform .12s;
+    box-shadow:0 5px 10px rgba(0,0,0,.2)}
+  .hole .label::after{content:"";position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);border:8px solid transparent;border-top-color:#ffcf6b}
+  .hole.up .label{opacity:1;transform:translate(-50%,0)}
+  .hole .label.good{background:#dcffe4;border-color:var(--good);color:#166b32}
+  .hole .label.good::after{border-top-color:var(--good)}
+  .hole .label.bad{background:#ffe0e0;border-color:var(--bad);color:#9a1c1c}
+  .hole .label.bad::after{border-top-color:var(--bad)}
+
+  /* ---------- ค้อน ---------- */
+  .hammer{position:absolute;width:clamp(70px,11vw,120px);z-index:60;pointer-events:none;opacity:0;
+    transform:translate(-26%,-22%);transition:opacity .1s;will-change:left,top;filter:drop-shadow(0 5px 5px rgba(0,0,0,.35))}
+  .hammer.show{opacity:1}
+  .hammer.swing{animation:swing .2s ease}
+  @keyframes swing{40%{transform:translate(-26%,-22%) rotate(-32deg)}100%{transform:translate(-26%,-22%) rotate(0)}}
+
+  .float{position:absolute;z-index:70;font-weight:900;font-size:clamp(30px,6vw,58px);pointer-events:none;
+    animation:floatup .8s ease-out forwards;text-shadow:0 3px 0 rgba(0,0,0,.25)}
+  .float.good{color:#20c257}.float.bad{color:#ff3b3b}
+  @keyframes floatup{0%{opacity:0;transform:translate(-50%,0) scale(.6)}20%{opacity:1;transform:translate(-50%,-10px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-90px) scale(1)}}
+
+  .warn{position:absolute;left:50%;top:14%;transform:translate(-50%,-14px);z-index:50;
+    background:rgba(226,59,59,.94);color:#fff;font-weight:800;font-size:clamp(18px,3.4vw,32px);
+    padding:12px 30px;border-radius:999px;box-shadow:0 8px 18px var(--shadow);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none}
+  .warn.show{opacity:1;transform:translate(-50%,0);animation:warnpulse 1s ease-in-out infinite}
+  @keyframes warnpulse{50%{transform:translate(-50%,-6px)}}
+
+  /* ---------- หน้าจบ ---------- */
+  #end .panel{text-align:center;max-width:min(92vw,560px)}
+  .end-title{font-weight:900;font-size:clamp(34px,8vw,68px);color:#ff6b3d;text-shadow:0 3px 0 #fff,0 6px 0 rgba(0,0,0,.15);margin-bottom:6px;animation:bob 2.4s ease-in-out infinite}
+  .final{font-weight:900;font-size:clamp(64px,15vw,140px);line-height:1;color:#2fa84f;text-shadow:0 4px 0 #fff,0 8px 14px rgba(0,0,0,.2);margin:6px 0}
+  .final-lbl{font-weight:700;font-size:clamp(16px,3vw,24px);color:#8a561f}
+  .praise{font-weight:700;font-size:clamp(18px,3.6vw,30px);color:#4a2c12;margin:14px 0 6px}
+  .stats{display:flex;gap:14px;justify-content:center;margin-top:12px}
+  .stat{flex:1;background:#fff;border-radius:16px;padding:12px;border:3px solid #ffe6b0}
+  .stat .n{font-weight:900;font-size:clamp(26px,5vw,44px)}
+  .stat.g .n{color:var(--good)}.stat.b .n{color:var(--bad)}
+  .stat .t{font-weight:600;font-size:clamp(13px,2.2vw,17px);color:#7a5a2a}
+
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+
+<video id="cam" playsinline muted></video>
+
+<!-- ============ หน้าเริ่ม ============ -->
+<section id="start" class="screen active">
+  <div class="sun"></div>
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+
+  <div class="wood-sign">
+    <div class="title">เกมตีตัวตุ่น แม่ ก กา</div>
+    <div class="subtitle">ฝึกภาษาไทย เรื่องมาตราตัวสะกด</div>
+  </div>
+
+  <div class="panel">
+    <div class="how">
+      <div class="step"><div class="num">1</div><span class="emoji">🙌</span><p>ยกมือขึ้น<br>ให้กล้องเห็น</p></div>
+      <div class="step"><div class="num">2</div><span class="emoji">🔨</span><p>ขยับมือ<br>บังคับค้อน</p></div>
+      <div class="step"><div class="num">3</div><span class="emoji">🐹</span><p>ตีเฉพาะคำ<br>“แม่ ก กา”</p></div>
+    </div>
+    <div class="rules">
+      <span class="rule g">ตีถูก +10</span>
+      <span class="rule b">ตีผิด −5</span>
+      <span class="rule t">⏱ 60 วินาที</span>
+    </div>
+    <div style="text-align:center;margin-top:14px;font-weight:600;font-size:clamp(14px,2.4vw,20px);color:#6b4a1e">
+      คำ “แม่ ก กา” คือคำที่<b>ไม่มีตัวสะกด</b> เช่น ปลา หมา ตา ปู งู 🐟<br>
+      คำที่<b>มีตัวสะกด</b> ห้ามตี เช่น นก บ้าน ช้าง ลิง ⛔
+    </div>
+    <div style="text-align:center">
+      <button id="startBtn" class="big-btn">เริ่มเกมเลย! ▶</button>
+    </div>
+    <div id="errBox" class="errbox"></div>
+  </div>
+
+  <svg class="deco-mole left" viewBox="0 0 100 100"><use href="#moleShape"/></svg>
+  <svg class="deco-mole right" viewBox="0 0 100 100"><use href="#moleShape"/></svg>
+</section>
+
+<!-- ============ หน้าเล่น ============ -->
+<section id="play" class="screen">
+  <div class="field" id="field">
+    <div class="hud" id="timeHud"><span class="ic">⏱</span><div><div class="lbl">เวลา</div><div class="val" id="timeVal">60</div></div></div>
+    <div class="hud" id="scoreHud"><span class="ic">🏆</span><div><div class="lbl">คะแนน</div><div class="val" id="scoreVal">0</div></div></div>
+    <div class="grid" id="grid"></div>
+    <div class="warn" id="warn">🙌 ยกมือขึ้นให้กล้องเห็น</div>
+    <img class="hammer" id="hammer0" alt="ค้อน">
+    <img class="hammer" id="hammer1" alt="ค้อน">
+  </div>
+</section>
+
+<!-- ============ หน้าจบ ============ -->
+<section id="end" class="screen">
+  <div class="sun"></div>
+  <div class="cloud c1"></div>
+  <div class="panel">
+    <div class="end-title">หมดเวลา! 🎉</div>
+    <div class="final-lbl">คะแนนรวม</div>
+    <div class="final" id="finalScore">0</div>
+    <div class="praise" id="praise"></div>
+    <div class="stats">
+      <div class="stat g"><div class="n" id="cCorrect">0</div><div class="t">ตีถูก 🐹</div></div>
+      <div class="stat b"><div class="n" id="cWrong">0</div><div class="t">ตีพลาด ⛔</div></div>
+    </div>
+    <button id="replayBtn" class="big-btn" style="margin-top:22px">เล่นอีกครั้ง ↺</button>
+  </div>
+</section>
+
+<!-- นิยามรูปตัวตุ่น (ใช้ซ้ำได้) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="moleShape">
+      <ellipse cx="50" cy="92" rx="30" ry="7" fill="rgba(0,0,0,.18)"/>
+      <ellipse cx="50" cy="58" rx="34" ry="36" fill="#8a6a52"/>
+      <ellipse cx="50" cy="58" rx="34" ry="36" fill="url(#mg)"/>
+      <ellipse cx="50" cy="66" rx="22" ry="24" fill="#d9b89c"/>
+      <ellipse cx="20" cy="40" rx="9" ry="11" fill="#8a6a52"/>
+      <ellipse cx="80" cy="40" rx="9" ry="11" fill="#8a6a52"/>
+      <ellipse cx="20" cy="40" rx="5" ry="7" fill="#f2b6c8"/>
+      <ellipse cx="80" cy="40" rx="5" ry="7" fill="#f2b6c8"/>
+      <circle cx="39" cy="52" r="7" fill="#fff"/><circle cx="61" cy="52" r="7" fill="#fff"/>
+      <circle cx="40" cy="53" r="3.6" fill="#3a2418"/><circle cx="60" cy="53" r="3.6" fill="#3a2418"/>
+      <circle cx="41.4" cy="51.6" r="1.2" fill="#fff"/><circle cx="61.4" cy="51.6" r="1.2" fill="#fff"/>
+      <ellipse cx="50" cy="63" rx="6" ry="4.6" fill="#e8829a"/>
+      <path d="M44 70 Q50 76 56 70" stroke="#7a4b3a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="26" cy="80" rx="8" ry="6" fill="#d9b89c"/>
+      <ellipse cx="74" cy="80" rx="8" ry="6" fill="#d9b89c"/>
+    </g>
+    <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a07a5e"/><stop offset="1" stop-color="#75563f"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<!-- MediaPipe Hands (CDN pinned) -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js" crossorigin="anonymous"></script>
+
+<script>
+/* ================= ข้อมูลคำ ================= */
+const KAKA  = ["ปลา","หมา","ตา","ขา","ปู","งู","หู","มือ","เสือ","เรือ","ไก่","นา","ดี","สี","ผี","ชา"]; // ไม่มีตัวสะกด → ตี
+const SAKOT = ["เดือน","นก","ปาก","กิน","ลม","ฝน","คน","บ้าน","นอน","จาน","แมว","ช้าง","ลิง","เป็ด"];   // มีตัวสะกด → ห้ามตี
+
+/* ================= รูปค้อน (SVG data URI) ================= */
+const HAMMER_SVG = encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <g>
+    <rect x="54" y="46" width="14" height="66" rx="7" fill="#a9722f"/>
+    <rect x="54" y="46" width="6" height="66" rx="3" fill="#c68b45"/>
+    <rect x="18" y="24" width="84" height="40" rx="12" fill="#8f9aa6"/>
+    <rect x="18" y="24" width="84" height="16" rx="8" fill="#b9c3cd"/>
+    <rect x="18" y="52" width="84" height="12" rx="6" fill="#6d7883"/>
+    <rect x="52" y="20" width="16" height="12" rx="4" fill="#6d7883"/>
+  </g>
+</svg>`);
+const HAMMER_URL = "data:image/svg+xml;charset=utf-8," + HAMMER_SVG;
+
+/* ================= องค์ประกอบ ================= */
+const $ = id => document.getElementById(id);
+const screens = {start:$("start"), play:$("play"), end:$("end")};
+const field = $("field"), grid = $("grid"), warn = $("warn");
+const timeVal = $("timeVal"), scoreVal = $("scoreVal"), timeHud = $("timeHud");
+const hammers = [$("hammer0"), $("hammer1")];
+hammers.forEach(h => h.src = HAMMER_URL);
+
+/* ================= สถานะเกม ================= */
+let score=0, correctHits=0, wrongHits=0, timeLeft=60;
+let gameRunning=false, timerInt=null, spawnTimer=null, stageRect=null;
+const holes=[];
+
+/* ================= สร้างหลุม 9 หลุม ================= */
+for(let i=0;i<9;i++){
+  const el=document.createElement("div");
+  el.className="hole";
+  el.innerHTML=`<div class="back"></div>
+    <div class="mole"><svg viewBox="0 0 100 100" width="100%"><use href="#moleShape"/></svg></div>
+    <div class="lip"></div><div class="label"></div>`;
+  grid.appendChild(el);
+  holes.push({el, labelEl:el.querySelector(".label"), active:false, hit:false, isKaKa:false, hideTimer:null});
+}
+
+/* ================= เสียง (Web Audio API) ================= */
+let audioCtx=null;
+function initAudio(){
+  if(!audioCtx){ try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(audioCtx && audioCtx.state==="suspended") audioCtx.resume();
+}
+function blip(freq,dur,type,vol,slideTo){
+  if(!audioCtx) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain(), t=audioCtx.currentTime;
+  o.type=type; o.frequency.setValueAtTime(freq,t);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,t+dur);
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t+dur+0.02);
+}
+const playGood=()=>{ blip(660,0.12,"triangle",0.32); setTimeout(()=>blip(990,0.16,"triangle",0.3),85); };
+const playBad =()=>{ blip(200,0.28,"sawtooth",0.26,90); };
+const playPop =()=>{ blip(360,0.09,"sine",0.16,640); };
+
+/* ================= สลับหน้าจอ ================= */
+function showScreen(name){
+  for(const k in screens) screens[k].classList.toggle("active", k===name);
+}
+
+/* ================= สุ่มคำ / โผล่ตัวตุ่น ================= */
+function pickWord(){
+  const isKaKa = Math.random() < 0.55;
+  const arr = isKaKa ? KAKA : SAKOT;
+  return { word: arr[Math.floor(Math.random()*arr.length)], isKaKa };
+}
+function spawnMole(){
+  const free = holes.filter(h=>!h.active);
+  if(!free.length) return;
+  const hole = free[Math.floor(Math.random()*free.length)];
+  const {word,isKaKa} = pickWord();
+  hole.active=true; hole.hit=false; hole.isKaKa=isKaKa;
+  hole.labelEl.textContent=word;
+  hole.labelEl.classList.remove("good","bad");
+  hole.el.classList.remove("whacked","wrong");
+  hole.el.classList.add("up");
+  playPop();
+  const dur = 1000 + Math.random()*800; // 1.0–1.8 วินาที
+  hole.hideTimer=setTimeout(()=>hideMole(hole), dur);
+}
+function hideMole(hole){
+  clearTimeout(hole.hideTimer);
+  hole.el.classList.remove("up");
+  hole.active=false; hole.hit=false;
+}
+
+/* ================= จังหวะการโผล่ (ถี่ขึ้นเมื่อเวลาน้อย) ================= */
+function spawnInterval(){
+  const t=Math.max(0,Math.min(60,timeLeft));
+  return 420 + (t/60)*(950-420); // 950ms → 420ms
+}
+function spawnLoop(){
+  if(!gameRunning) return;
+  spawnMole();
+  if(timeLeft<20 && Math.random()<0.45) spawnMole(); // ปลายเกมโผล่พร้อมกันหลายตัว
+  spawnTimer=setTimeout(spawnLoop, spawnInterval());
+}
+
+/* ================= ตี ================= */
+function doHit(hole, px, py, hammerEl){
+  hole.hit=true;
+  if(hammerEl){ hammerEl.classList.remove("swing"); void hammerEl.offsetWidth; hammerEl.classList.add("swing"); }
+  if(hole.isKaKa){
+    score+=10; correctHits++;
+    hole.labelEl.classList.add("good");
+    hole.el.classList.add("whacked");
+    playGood(); floatText("+10","good",px,py);
+  } else {
+    score=Math.max(0,score-5); wrongHits++;
+    hole.labelEl.classList.add("bad");
+    hole.el.classList.add("wrong");
+    playBad(); floatText("−5","bad",px,py);
+  }
+  scoreVal.textContent=score;
+  setTimeout(()=>hideMole(hole), 260);
+}
+function checkHits(px, py, hammerEl){
+  for(const hole of holes){
+    if(!hole.active || hole.hit) continue;
+    const r=hole.el.getBoundingClientRect();
+    const cx=r.left-stageRect.left + r.width/2;
+    const cy=r.top-stageRect.top  + r.height*0.4;
+    const rad=r.width*0.52;
+    const dx=px-cx, dy=py-cy;
+    if(dx*dx+dy*dy < rad*rad){ doHit(hole,px,py,hammerEl); return; }
+  }
+}
+function floatText(txt, cls, x, y){
+  const f=document.createElement("div");
+  f.className="float "+cls; f.textContent=txt;
+  f.style.left=x+"px"; f.style.top=(y-20)+"px";
+  field.appendChild(f);
+  setTimeout(()=>f.remove(), 850);
+}
+
+/* ================= MediaPipe / กล้อง ================= */
+let hands=null, camera=null, cameraStarted=false;
+
+function onResults(res){
+  stageRect = field.getBoundingClientRect();
+  const lms = res.multiHandLandmarks || [];
+  if(gameRunning) warn.classList.toggle("show", lms.length===0);
+
+  for(let i=0;i<2;i++){
+    const h=hammers[i], lm=lms[i];
+    if(lm){
+      const tip=lm[8]; // ปลายนิ้วชี้
+      const px=(1-tip.x)*stageRect.width;  // กลับซ้าย-ขวาให้เหมือนกระจก
+      const py=tip.y*stageRect.height;
+      h.style.left=px+"px"; h.style.top=py+"px";
+      h.classList.add("show");
+      if(gameRunning) checkHits(px,py,h);
+    } else {
+      h.classList.remove("show");
+    }
+  }
+}
+
+async function initCamera(){
+  if(cameraStarted) return;
+  if(typeof Hands==="undefined" || typeof Camera==="undefined")
+    throw new Error("โหลดไลบรารีไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ต");
+  hands=new Hands({ locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}` });
+  hands.setOptions({ maxNumHands:2, modelComplexity:0, minDetectionConfidence:0.5, minTrackingConfidence:0.5 });
+  hands.onResults(onResults);
+  camera=new Camera($("cam"), {
+    onFrame: async()=>{ await hands.send({image:$("cam")}); },
+    width:640, height:480
+  });
+  await camera.start();
+  cameraStarted=true;
+}
+
+/* ================= เริ่ม / จบเกม ================= */
+function resetState(){ score=0; correctHits=0; wrongHits=0; timeLeft=60;
+  scoreVal.textContent=0; timeVal.textContent=60; timeHud.classList.remove("danger");
+  holes.forEach(hideMole);
+}
+function startTimer(){
+  timerInt=setInterval(()=>{
+    timeLeft--; timeVal.textContent=timeLeft;
+    if(timeLeft<=10) timeHud.classList.add("danger");
+    if(timeLeft<=0) endGame();
+  },1000);
+}
+function startGame(){
+  initAudio();
+  resetState();
+  showScreen("play");
+  gameRunning=true;
+  startTimer();
+  spawnLoop();
+}
+function endGame(){
+  gameRunning=false;
+  clearInterval(timerInt); clearTimeout(spawnTimer);
+  holes.forEach(hideMole);
+  hammers.forEach(h=>h.classList.remove("show"));
+  warn.classList.remove("show");
+  $("finalScore").textContent=score;
+  $("cCorrect").textContent=correctHits;
+  $("cWrong").textContent=wrongHits;
+  $("praise").textContent=praiseFor(score);
+  showScreen("end");
+}
+function praiseFor(s){
+  if(s>=200) return "สุดยอดไปเลย! เก่งมาตราตัวสะกดมากๆ 🌟";
+  if(s>=120) return "เยี่ยมมาก! แม่นเรื่องแม่ ก กา 👍";
+  if(s>=50)  return "ดีมาก! ฝึกอีกนิดจะเก่งกว่านี้ 😊";
+  return "ไม่เป็นไรนะ ลองเล่นอีกครั้งได้เลย! 💪";
+}
+
+/* ================= ปุ่ม ================= */
+$("startBtn").addEventListener("click", async ()=>{
+  const btn=$("startBtn"), err=$("errBox");
+  err.classList.remove("show");
+  btn.classList.add("loading"); btn.textContent="กำลังเปิดกล้อง...";
+  initAudio();
+  try{
+    await initCamera();
+    btn.classList.remove("loading"); btn.textContent="เริ่มเกมเลย! ▶";
+    startGame();
+  }catch(e){
+    btn.classList.remove("loading"); btn.textContent="เริ่มเกมเลย! ▶";
+    err.textContent="⚠ เปิดกล้องไม่ได้: "+(e && e.message ? e.message : "กรุณาอนุญาตให้เข้าถึงกล้อง แล้วลองใหม่ (ต้องเปิดผ่าน HTTPS)");
+    err.classList.add("show");
+  }
+});
+$("replayBtn").addEventListener("click", startGame);
+
+window.addEventListener("resize", ()=>{ stageRect=field.getBoundingClientRect(); });
+</script>
+</body>
+</html>
